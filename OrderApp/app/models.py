@@ -3,6 +3,7 @@ from datetime import datetime
 from enum import Enum
 from app import app, db
 import hashlib
+from flask_login import UserMixin
 
 # ---------------- ENUM ----------------
 
@@ -19,17 +20,18 @@ class EnumStatus(Enum):
 
 # ---------------- USER + KẾ THỪA ----------------
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
     username = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100))
     avt = db.Column(db.String(255))
     phone = db.Column(db.String(20))
-    role = db.Column(db.Enum(EnumRole), nullable=False)
-    type = db.Column(db.String(50))  # Dùng cho kế thừa ORM
+    role = db.Column(db.Enum(EnumRole), default=EnumRole.khachHang)
+    type = db.Column(db.String(50))
 
     __mapper_args__ = {
         'polymorphic_identity': 'user',
@@ -147,6 +149,7 @@ if __name__ == '__main__':
 
         if User.query.count() == 0:
             admin = User(
+                name='admin',
                 username='admin',
                 email='admin123@gmail.com',
                 password=hashlib.md5('123456'.encode('utf-8')).hexdigest(),
@@ -154,7 +157,8 @@ if __name__ == '__main__':
             )
 
             nha_hang = NhaHang(
-                username='staff',
+                name='shop1',
+                username='shop1',
                 email='staff123@gmail.com',
                 password=hashlib.md5('123456'.encode('utf-8')).hexdigest(),
                 role=EnumRole.nhaHang,
@@ -166,7 +170,7 @@ if __name__ == '__main__':
             db.session.commit()
 
         if MonAn.query.count() == 0:
-            nha_hang_staff = NhaHang.query.filter_by(username='staff').first()
+            nha_hang_staff = NhaHang.query.filter_by(username='shop1').first()
 
             # Lấy các danh mục theo tên
             dm_khai_vi = DanhMucMonAn.query.filter_by(tenDanhMuc="Khai vị").first()
@@ -268,5 +272,5 @@ if __name__ == '__main__':
                 ))
 
             db.session.commit()
-            print("✅ Đã thêm 20 món ăn chi tiết.")
+
 
