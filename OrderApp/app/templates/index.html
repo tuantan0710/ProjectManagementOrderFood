@@ -1,0 +1,23 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}" />
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<main class="container">
+    <div class="row">
+        {% for f in foods %}
+        <div class="col-md-3 col-12 p-2">
+            <div class="card">
+                <img class="card-img-top" src="{{ f.img }}" alt="{{ f.name }}">
+                <div class="card-body">
+                    <h4 class="card-title">{{ f.name }}</h4>
+                    <p class="card-text">{{ f.gia }}</p>
+                    <a href="#" class="btn btn-primary">Xem chi tiết</a>
+                    <button class="btn btn-danger">Thêm vào giỏ hàng</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</main>
+
+{% endblock %}
