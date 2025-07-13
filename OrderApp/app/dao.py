@@ -20,13 +20,13 @@ def auth_user(username, password, role=None):
 
     return u.first()
 
-def add_user(name, username, password, avatar=None):
+def add_user(name, username, password, avt=None):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
 
     u = User(name=name, username=username, password=password)
-    if avatar:
-        res = cloudinary.uploader.upload(avatar)
-        u.avatar = res.get('secure_url')
+    if avt:
+        res = cloudinary.uploader.upload(avt)
+        u.avt = res.get('secure_url')
 
     db.session.add(u)
     db.session.commit()
