@@ -1,0 +1,80 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<main class="container mt-5">
+    <div class="row">
+        <!-- Ảnh món ăn -->
+        <div class="col-md-5">
+            <img src="{{ mon_an.img or url_for('static', filename='images/default-food.png') }}"
+                 alt="{{ mon_an.name }}" class="img-fluid rounded">
+        </div>
+
+        <!-- Thông tin món ăn -->
+        <div class="col-md-7">
+            <h2 class="fw-bold">{{ mon_an.name }}</h2>
+            <p class="text-muted mb-1"><strong>Danh mục:</strong> {{ mon_an.danh_muc.tenDanhMuc }}</p>
+            <p><strong>Giá:</strong> <span class="text-danger h5">{{ "{:,.0f}".format(mon_an.gia) }} đ</span></p>
+            <p><strong>Tình trạng:</strong>
+                {% if mon_an.tinhTrang %}
+                    <span class="badge bg-success">Đang bán</span>
+                {% else %}
+                    <span class="badge bg-secondary">Ngừng bán</span>
+                {% endif %}
+            </p>
+            <p><strong>Mô tả:</strong> {{ mon_an.chiTietMon or 'Không có mô tả' }}</p>
+
+            {% if current_user.is_authenticated and current_user.role.value == 'khachHang' %}
+            <form method="post" action="">
+                <div class="mb-3">
+                    <label for="soLuong" class="form-label">Số lượng</label>
+                    <input type="number" name="soLuong" id="soLuong" value="1" min="1" class="form-control" required>
+                </div>
+                <button class="btn btn-danger btn-sm w-50 ms-1">
+                            <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                        </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Thông tin nhà hàng -->
+   <div class="card mt-5">
+    <div class="card-body d-flex align-items-center">
+        <img src="{{ mon_an.nha_hang.avt or url_for('static', filename='images/default-user.png') }}"
+             class="rounded-circle me-3" width="60" height="60" alt="Avatar">
+        <div>
+            <h5 class="mb-0">{{ mon_an.nha_hang.name or mon_an.nha_hang.username }}</h5>
+            <small>Giờ mở cửa: {{ mon_an.nha_hang.gio_mo_cua.strftime('%H:%M') if mon_an.nha_hang.gio_mo_cua else '?' }} - {{ mon_an.nha_hang.gio_dong_cua.strftime('%H:%M') if mon_an.nha_hang.gio_dong_cua else '?' }}</small>
+            <br>
+            <a href="{{ url_for('chi_tiet_nha_hang', nha_hang_id=mon_an.nha_hang.id) }}" class="btn btn-outline-primary btn-sm mt-2">
+                Xem chi tiết nhà hàng
+            </a>
+        </div>
+    </div>
+</div
+
+    <!-- Đánh giá món ăn -->
+    <div class="mt-5">
+        <h4>Đánh giá món ăn</h4>
+        {% if mon_an.chi_tiet_don_hang %}
+            {% set da_danh_gia = false %}
+            {% for ct in mon_an.chi_tiet_don_hang %}
+                {% for dg in ct.don_hang.khach_hang.danh_gia %}
+                    {% if not da_danh_gia %}
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <strong>{{ dg.user.name }}</strong> - {{ dg.date.strftime('%d/%m/%Y') }}<br>
+                                <span>⭐ {{ dg.sao }}/5</span>
+                                <p class="mb-0">{{ dg.content }}</p>
+                            </div>
+                        </div>
+                        {% set da_danh_gia = true %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        {% else %}
+            <p>Chưa có đánh giá nào cho món ăn này.</p>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

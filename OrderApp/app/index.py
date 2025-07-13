@@ -1,16 +1,20 @@
-from flask import render_template, request, redirect, url_for, session, abort
+from flask import render_template, request, redirect, url_for, session, abort, jsonify, flash
 from flask_login import login_user, logout_user, current_user, login_required
 
-from app import dao, app, login, db
-from app.models import DanhMucMonAn, MonAn, NhaHang, EnumRole
+from app import dao, app, login, db, utils
+from app.models import DanhMucMonAn, MonAn, NhaHang, EnumRole, DonHang, ChiTietDonHang, EnumStatus
 import cloudinary.uploader
+
+from app.utils import send_gmail
 
 
 @app.route('/')
 def index():
+    kw = request.args.get('kw', '')
     cates = dao.load_categories()
-    foods = dao.load_foods()
-    return render_template('index.html', categories=cates, foods=foods)
+    foods = dao.load_foods(keyword=kw)
+    nha_hangs = dao.load_nha_hang(keyword=kw)  # tìm theo tên nhà hàng
+    return render_template('index.html', categories=cates, foods=foods, nha_hangs=nha_hangs, kw=kw)
 
 @app.route('/danh-muc/<int:category_id>')
 def food_by_category(category_id):
@@ -44,18 +48,21 @@ def register_process():
         password = request.form.get('password')
         confirm = request.form.get('confirm')
 
-        if password.__eq__(confirm):
-            data = request.form.copy()
-            del data['confirm']
+        if password == confirm:
+            email = request.form.get('email')
+            if not email:
+                err_msg = 'Email là bắt buộc!'
+            else:
+                data = request.form.copy()
+                del data['confirm']
 
-            avt = request.files.get('avt')
-            dao.add_user(avt=avt, **data)
-            return redirect('/login')
+                avt = request.files.get('avt')
+                dao.add_user(avt=avt, **data)
+                return redirect('/login')
         else:
             err_msg = 'Mật khẩu KHÔNG khớp!'
 
     return render_template('register.html', err_msg=err_msg)
-
 
 @app.route("/nha-hang/<int:nha_hang_id>")
 def chi_tiet_nha_hang(nha_hang_id):
@@ -64,26 +71,34 @@ def chi_tiet_nha_hang(nha_hang_id):
 
     return render_template("restaurentDetail.html", nha_hang=nha_hang, foods=danh_sach_mon)
 
-@app.route('/mon-an/<int:mon_an_id>/cap-nhat-tinh-trang', methods=['POST'])
+@app.route('/api/cap-nhat-mon/<int:mon_an_id>', methods=['POST'])
 @login_required
-def cap_nhat_tinh_trang_mon(mon_an_id):
-    mon = MonAn.query.get_or_404(mon_an_id)
+def api_cap_nhat_mon(mon_an_id):
+    data = request.get_json()
+    tinh_trang_moi_raw = data.get('tinh_trang_moi')
+
+
+    tinh_trang_moi = tinh_trang_moi_raw in ['true', 'True', True, 1, '1']
+
+    mon = db.session.get(MonAn, mon_an_id)
+    if not mon:
+        return jsonify({'status': 'error', 'message': 'Món không tồn tại'}), 404
+
 
     if mon.nha_hang.id != current_user.id:
-        return redirect(url_for('index'))
+        return jsonify({'status': 'error', 'message': 'Không có quyền'}), 403
 
-    tinh_trang_moi = request.form.get('tinh_trang_moi') == 'True'
+
     mon.tinhTrang = tinh_trang_moi
-
     db.session.commit()
-    return redirect(request.referrer or url_for('index'))
+
+    return jsonify({'status': 'success', 'tinh_trang': mon.tinhTrang})
 
 @app.route('/mon-an/<int:food_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_food(food_id):
     mon = MonAn.query.get_or_404(food_id)
 
-    # Kiểm tra quyền truy cập
     if current_user.role != EnumRole.nhaHang or mon.idNhaHang != current_user.id:
         abort(403)
 
@@ -102,8 +117,147 @@ def edit_food(food_id):
         db.session.commit()
         return redirect(url_for('chi_tiet_nha_hang', nha_hang_id=current_user.id))
 
-    return render_template('edit_food.html', food=mon)
+    return render_template('restaurent/edit_food.html', food=mon)
 
+@app.route("/nha-hang/don-hang")
+@login_required
+def quan_ly_don_hang():
+    if current_user.role != EnumRole.nhaHang:
+        return "Bạn không có quyền truy cập", 403
+
+
+    trang_thai = request.args.get("trang_thai")  # VD: 'daXacNhan'
+    sap_xep = request.args.get("sap_xep", "desc")  # asc hoặc desc
+
+    query = DonHang.query.filter_by(idNhaHang=current_user.id)
+
+    if trang_thai:
+        from app.models import EnumStatus
+        try:
+            query = query.filter(DonHang.trangThai == EnumStatus[trang_thai])
+        except KeyError:
+            pass
+
+    if sap_xep == "asc":
+        query = query.order_by(DonHang.thoiGian.asc())
+    else:
+        query = query.order_by(DonHang.thoiGian.desc())
+
+    don_hang = query.all()
+
+    return render_template(
+        "restaurent/quan_ly_don_hang.html",
+        don_hang=don_hang,
+        trang_thai_hien_tai=trang_thai,
+        sap_xep_hien_tai=sap_xep
+    )
+
+@app.route('/nha-hang/don-hang/<int:id>', methods=['GET', 'POST'])
+@login_required
+def chi_tiet_don_hang(id):
+    if current_user.role != EnumRole.nhaHang:
+        return "Bạn không có quyền truy cập", 403
+
+    don_hang = DonHang.query.get_or_404(id)
+    if don_hang.idNhaHang != current_user.id:
+        return "Không có quyền xem đơn hàng này", 403
+
+    chi_tiet = ChiTietDonHang.query.filter_by(idDH=id).all()
+
+    if request.method == 'POST':
+        new_status = request.form.get('trangThai')
+        note = request.form.get('noiDungHuy', '').strip()
+
+        # Kiểm tra nếu hủy mà không nhập lý do
+        if new_status == 'daHuy' and not note:
+            flash("Phải nhập lý do khi hủy đơn hàng!", "danger")
+        else:
+            try:
+                don_hang.trangThai = EnumStatus[new_status]
+                db.session.commit()
+
+                # Gửi email
+                subject = f"Đơn hàng #{don_hang.id} - Trạng thái mới: {don_hang.trangThai.value}"
+                content = f"""
+                    <p>Xin chào {don_hang.khach_hang.name},</p>
+                    <p>Đơn hàng của bạn đã được cập nhật trạng thái: <strong>{don_hang.trangThai.value}</strong></p>
+                """
+
+                if new_status == 'daHuy' and note:
+                    content += f"<p><strong>Lý do hủy:</strong> {note}</p>"
+
+                send_gmail(don_hang.khach_hang.email, subject, content)
+                flash("Cập nhật và gửi email thành công!", "success")
+
+            except Exception as e:
+                print("Lỗi cập nhật trạng thái:", e)
+                flash("Có lỗi xảy ra khi cập nhật đơn hàng!", "danger")
+
+            return redirect(url_for('chi_tiet_don_hang', id=id))
+
+    return render_template('restaurent/chi_tiet_don_hang.html', don_hang=don_hang, chi_tiet=chi_tiet)
+
+@app.route('/register-nhahang', methods=['get', 'post'])
+def register_nhahang():
+    err_msg = None
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm = request.form.get('confirm')
+        if password == confirm:
+            data = request.form.copy()
+            del data['confirm']
+            avt = request.files.get('avt')
+
+            try:
+                dao.add_nha_hang(avt=avt, **data)
+                return redirect('/login')
+            except Exception as e:
+                err_msg = f"Lỗi: {str(e)}"
+        else:
+            err_msg = "Mật khẩu không khớp!"
+
+    return render_template('register_nhahang.html', err_msg=err_msg)
+
+
+
+@app.route('/mon-an/<int:id>')
+def chi_tiet_mon_an(id):
+    mon_an = MonAn.query.get_or_404(id)
+    return render_template('monAnDetail.html', mon_an=mon_an)
+
+@app.route("/mon-an/add", methods=['GET', 'POST'])
+@login_required
+def them_mon_an():
+    if current_user.role != EnumRole.nhaHang:
+        abort(403)
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        gia = request.form.get('gia')
+        chi_tiet = request.form.get('chiTietMon')
+        id_danh_muc = request.form.get('idDanhMuc')
+        img = request.files.get('img')
+
+        img_url = None
+        if img:
+            upload = cloudinary.uploader.upload(img)
+            img_url = upload.get('secure_url')
+
+        mon = MonAn(
+            name=name,
+            gia=float(gia),
+            chiTietMon=chi_tiet,
+            idDanhMuc=int(id_danh_muc),
+            idNhaHang=current_user.id,
+            img=img_url
+        )
+        db.session.add(mon)
+        db.session.commit()
+
+        return redirect(f"/nha-hang/{current_user.id}")
+
+    danh_mucs = DanhMucMonAn.query.all()
+    return render_template("restaurent/them_mon_an.html", danh_mucs=danh_mucs)
 
 
 @login.user_loader
