@@ -1,0 +1,74 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Quản lý đơn hàng</h2>
+
+    <form method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <label class="form-label">Lọc theo trạng thái</label>
+        <select name="trang_thai" class="form-select">
+            <option value="">-- Tất cả --</option>
+            <option value="cho" {{ 'selected' if trang_thai_hien_tai == 'cho' else '' }}>Đang chờ</option>
+            <option value="daXacNhan" {{ 'selected' if trang_thai_hien_tai == 'daXacNhan' else '' }}>Đã xác nhận</option>
+            <option value="daGiao" {{ 'selected' if trang_thai_hien_tai == 'daGiao' else '' }}>Đã giao</option>
+            <option value="daHuy" {{ 'selected' if trang_thai_hien_tai == 'daHuy' else '' }}>Đã hủy</option>
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Sắp xếp theo thời gian</label>
+        <select name="sap_xep" class="form-select">
+            <option value="desc" {{ 'selected' if sap_xep_hien_tai == 'desc' else '' }}>Mới nhất</option>
+            <option value="asc" {{ 'selected' if sap_xep_hien_tai == 'asc' else '' }}>Cũ nhất</option>
+        </select>
+    </div>
+
+    <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Lọc</button>
+    </div>
+</form>
+
+    {% if don_hang %}
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Khách hàng</th>
+                    <th>Thời gian</th>
+                    <th>Tổng giá</th>
+                    <th>Trạng thái</th>
+                    <th>Chi tiết</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dh in don_hang %}
+                <tr>
+                    <td>{{ dh.id }}</td>
+                    <td>{{ dh.khach_hang.name }}</td>
+                    <td>{{ dh.thoiGian.strftime("%d/%m/%Y %H:%M") }}</td>
+                    <td>{{ "{:,.0f}".format(dh.tongGia) }} đ</td>
+                    <td>
+                        <span class="badge
+                            {% if dh.trangThai.name == 'cho' %} bg-warning
+                            {% elif dh.trangThai.name == 'daXacNhan' %} bg-info
+                            {% elif dh.trangThai.name == 'daGiao' %} bg-success
+                            {% elif dh.trangThai.name == 'daHuy' %} bg-danger
+                            {% endif %}">
+                            {{ dh.trangThai.value }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('chi_tiet_don_hang', id=dh.id) }}" class="btn btn-sm btn-primary">Xem</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">Chưa có đơn hàng nào.</div>
+    {% endif %}
+</div>
+{% endblock %}

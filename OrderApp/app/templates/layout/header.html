@@ -6,45 +6,64 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="collapsibleNavbar">
-            <ul class="navbar-nav">
+            <!-- Menu trái -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
                     <a class="nav-link" href="/">Trang chủ</a>
                 </li>
-                {% for c in categories %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('food_by_category', category_id=c.id) }}">{{ c.tenDanhMuc
-                        }}</a>
-                </li>
-                {% endfor %}
-                {% if current_user.is_authenticated %}
-                <li class="nav-item">
-                    {% if current_user.role.value == 'nhaHang' %}
-                    <a class="nav-link text-danger"
-                       href="{{ url_for('chi_tiet_nha_hang', nha_hang_id=current_user.id) }}">
-                        <img src="{{ current_user.avt or url_for('static', filename='images/default-user.png') }}"
-                             width="25" class="rounded-circle"/>
-                        Chào {{ current_user.username }}.
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Danh mục món ăn
                     </a>
-                    {% else %}
-                    <a class="nav-link text-danger" href="#">
-                        <img src="{{ current_user.avt or url_for('static', filename='images/default-user.png') }}"
-                             width="25" class="rounded-circle"/>
-                        Chào {{ current_user.username }}.
-                    </a>
-                    {% endif %}
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        {% for c in categories %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('food_by_category', category_id=c.id) }}">
+                                {{ c.tenDanhMuc }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link text-success" href="/logout">Đăng xuất</a>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link text-danger" href="/login">Đăng nhập</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-success" href="/register">Đăng ký</a>
-                </li>
-                {% endif %}
             </ul>
+
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+    {% if current_user.is_authenticated %}
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button"
+           data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{{ current_user.avt or url_for('static', filename='images/default-user.png') }}"
+                 class="rounded-circle" width="30" height="30" alt="avatar">
+            <span>Chào {{ current_user.username }}</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+            {% if current_user.role.value == 'nhaHang' %}
+            <li>
+                <a class="dropdown-item" href="{{ url_for('chi_tiet_nha_hang', nha_hang_id=current_user.id) }}">
+                    Thông tin nhà hàng
+                </a>
+                <a class="dropdown-item" href="{{ url_for('quan_ly_don_hang') }}">
+                    Quản lý đơn hàng
+                </a>
+            </li>
+            {% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('logout_process') }}">Đăng xuất</a></li>
+        </ul>
+    </li>
+    {% else %}
+    <li class="nav-item">
+        <a class="nav-link btn btn-success px-3 py-1 text-white" href="{{ url_for('login_process') }}">Đăng nhập</a>
+    </li>e
+    <li class="nav-item">
+        <a class="nav-link btn btn-success px-3 py-1 text-white" href="{{ url_for('register_process') }}">Đăng ký</a>
+    </li>
+    {% endif %}
+</ul>
+
+
         </div>
     </div>
 </nav>

@@ -20,9 +20,17 @@
     <hr>
 
     <h3>Thực đơn</h3>
+    {% if current_user.is_authenticated and current_user.role.value == 'nhaHang' and current_user.id == nha_hang.id %}
+    <div class="mb-3 text-end">
+        <a href="{{ url_for('them_mon_an') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Thêm món ăn
+        </a>
+    </div>
+    {% endif %}
     <div class="list-group">
         {% for f in foods %}
-        <div class="list-group-item mb-3 border rounded p-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+        <div id="mon{{ f.id }}"
+             class="list-group-item mb-3 border rounded p-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between">
             <div class="d-flex align-items-center flex-grow-1">
                 <img src="{{ f.img }}" alt="{{ f.name }}" class="img-thumbnail me-3"
                      style="width: 120px; height: auto;">
@@ -32,32 +40,28 @@
                     <p class="mb-1"><strong>{{ f.gia }} đ</strong></p>
                     <p class="mb-1">
                         <strong>Tình trạng:</strong>
-                        {% if f.tinhTrang %}
-                        <span class="text-success">Còn món</span>
-                        {% else %}
-                        <span class="text-danger">Hết món</span>
-                        {% endif %}
+                        <span id="tinhtrang{{ f.id }}" class="{{ 'text-success' if f.tinhTrang else 'text-danger' }}">
+                    {{ 'Còn món' if f.tinhTrang else 'Hết món' }}
+                </span>
                     </p>
                 </div>
             </div>
 
             {% if current_user.is_authenticated and current_user.id == nha_hang.id %}
             <div class="text-md-end mt-3 mt-md-0 d-flex flex-column align-items-end gap-2">
-                <form method="post" action="{{ url_for('cap_nhat_tinh_trang_mon', mon_an_id=f.id) }}" class="w-100">
-                    <input type="hidden" name="tinh_trang_moi" value="{{ not f.tinhTrang }}">
-                    <button type="submit"
-                            class="btn btn-outline-{% if f.tinhTrang %}danger{% else %}success{% endif %} btn-sm w-100">
-                        {% if f.tinhTrang %} Đánh dấu hết món {% else %} Đánh dấu còn món {% endif %}
-                    </button>
-                </form>
+                <button id="btnCapNhat{{ f.id }}"
+                        onclick="capNhatTinhTrang({{ f.id }}, {{ 'false' if f.tinhTrang else 'true' }})"
+                        class="btn btn-outline-{{ 'danger' if f.tinhTrang else 'success' }} btn-sm w-100">
+                    {{ 'Đánh dấu hết món' if f.tinhTrang else 'Đánh dấu còn món' }}
+                </button>
 
                 <a href="{{ url_for('edit_food', food_id=f.id) }}" class="btn btn-outline-primary btn-sm w-100">
                     <i class="bi bi-pencil-square me-1"></i> Chỉnh sửa
                 </a>
             </div>
             {% endif %}
-
         </div>
+
         {% endfor %}
     </div>
 
