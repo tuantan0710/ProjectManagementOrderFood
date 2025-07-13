@@ -1,0 +1,40 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Chỉnh sửa món ăn</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="name" class="form-label">Tên món</label>
+            <input type="text" class="form-control" name="name" value="{{ food.name }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="gia" class="form-label">Giá</label>
+            <input type="number" step="1000" class="form-control" name="gia" value="{{ food.gia }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="chiTietMon" class="form-label">Chi tiết món</label>
+            <textarea class="form-control" name="chiTietMon" rows="4">{{ food.chiTietMon }}</textarea>
+        </div>
+
+        <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" name="tinhTrang" id="tinhTrang"
+                   {% if food.tinhTrang %}checked{% endif %}>
+            <label class="form-check-label" for="tinhTrang">Còn món</label>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Ảnh hiện tại</label><br>
+            <img src="{{ food.img }}" width="150" class="img-thumbnail mb-2"><br>
+
+            <label for="img" class="form-label">Cập nhật ảnh mới</label>
+            <input type="file" class="form-control" name="img" accept="image/*">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+        <a href="{{ url_for('chi_tiet_nha_hang', nha_hang_id=current_user.id) }}" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>
+{% endblock %}

@@ -12,15 +12,26 @@
                 </li>
                 {% for c in categories %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('food_by_category', category_id=c.id) }}">{{ c.tenDanhMuc }}</a>
+                    <a class="nav-link" href="{{ url_for('food_by_category', category_id=c.id) }}">{{ c.tenDanhMuc
+                        }}</a>
                 </li>
                 {% endfor %}
-                 {% if current_user.is_authenticated %}
+                {% if current_user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link text-danger" href="/">
-                        <img src="{{ current_user.avatar }}" width="25" class="rounded-circle" />
+                    {% if current_user.role.value == 'nhaHang' %}
+                    <a class="nav-link text-danger"
+                       href="{{ url_for('chi_tiet_nha_hang', nha_hang_id=current_user.id) }}">
+                        <img src="{{ current_user.avt or url_for('static', filename='images/default-user.png') }}"
+                             width="25" class="rounded-circle"/>
                         Chào {{ current_user.username }}.
                     </a>
+                    {% else %}
+                    <a class="nav-link text-danger" href="#">
+                        <img src="{{ current_user.avt or url_for('static', filename='images/default-user.png') }}"
+                             width="25" class="rounded-circle"/>
+                        Chào {{ current_user.username }}.
+                    </a>
+                    {% endif %}
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-success" href="/logout">Đăng xuất</a>
