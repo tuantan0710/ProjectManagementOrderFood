@@ -7,7 +7,27 @@ import cloudinary.uploader
 
 from app.utils import send_gmail
 
+from flask import render_template, make_response
+from xhtml2pdf import pisa
+import io
 
+@app.route('/xuat-bill/<int:id>')
+def xuat_bill(id):
+    don_hang = DonHang.query.get_or_404(id)
+
+    html = render_template('restaurent/bill_template.html', dh=don_hang)
+
+    pdf_buffer = io.BytesIO()
+    pisa_status = pisa.CreatePDF(src=html, dest=pdf_buffer)
+
+    if pisa_status.err:
+        return f"Lỗi khi tạo PDF: {pisa_status.err}", 500
+
+    pdf_buffer.seek(0)
+    response = make_response(pdf_buffer.read())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'inline; filename=hoadon_{don_hang.id}.pdf'
+    return response
 @app.route('/')
 def index():
     kw = request.args.get('kw', '')
