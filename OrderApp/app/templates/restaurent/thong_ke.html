@@ -1,0 +1,65 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<h2 class="text-center">Thống kê doanh thu</h2>
+
+<!-- Form lọc -->
+<form method="get" class="row mb-4">
+    <div class="col-md-3">
+        <label>Tháng</label>
+        <select name="thang" class="form-control">
+            {% for i in range(1,13) %}
+            <option value="{{ i }}" {% if i == thang %}selected{% endif %}>Tháng {{ i }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label>Năm</label>
+        <input name="nam" type="number" class="form-control" value="{{ nam }}">
+    </div>
+    <div class="col-md-2 align-self-end">
+        <button class="btn btn-primary" type="submit">Lọc</button>
+    </div>
+</form>
+
+<h4>Tổng doanh thu: {{ "{:,.0f}".format(tong_doanh_thu) }} VND</h4>
+
+<!-- Biểu đồ -->
+<canvas id="chartDoanhThu" height="100"></canvas>
+
+<hr>
+
+<h5>Chi tiết đơn hàng đã giao:</h5>
+<ul class="list-group">
+    {% for dh in don_hang %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        Mã đơn: {{ dh.id }} - {{ dh.thoiGian.strftime("%d/%m/%Y") }}
+        <span>{{ "{:,.0f}".format(dh.tongGia) }} VND</span>
+    </li>
+    {% endfor %}
+</ul>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('chartDoanhThu').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [...Array({{ doanh_thu_ngay|length }}).keys()].map(i => i + 1),
+            datasets: [{
+                label: 'Doanh thu theo ngày (VND)',
+                data: {{ doanh_thu_ngay }},
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+{% endblock %}
