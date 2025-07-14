@@ -280,6 +280,47 @@ def them_mon_an():
     return render_template("restaurent/them_mon_an.html", danh_mucs=danh_mucs)
 
 
+from flask import request
+from datetime import datetime
+from sqlalchemy import extract
+import calendar
+
+@app.route("/nha-hang/thong-ke-doanh-thu")
+@login_required
+def thong_ke_doanh_thu():
+    if current_user.role != EnumRole.nhaHang:
+        return "Không có quyền truy cập", 403
+
+    
+    thang = request.args.get('thang', type=int) or datetime.now().month
+    nam = request.args.get('nam', type=int) or datetime.now().year
+
+
+    don_hang = DonHang.query.filter(
+        DonHang.idNhaHang == current_user.id,
+        DonHang.trangThai == EnumStatus.daGiao,
+        extract('month', DonHang.thoiGian) == thang,
+        extract('year', DonHang.thoiGian) == nam
+    ).all()
+
+
+    tong_doanh_thu = sum(dh.tongGia for dh in don_hang)
+
+
+    so_ngay = calendar.monthrange(nam, thang)[1]
+    doanh_thu_ngay = [0] * so_ngay
+
+    for dh in don_hang:
+        ngay = dh.thoiGian.day
+        doanh_thu_ngay[ngay - 1] += dh.tongGia
+
+    return render_template("restaurent/thong_ke.html",
+                           don_hang=don_hang,
+                           tong_doanh_thu=tong_doanh_thu,
+                           doanh_thu_ngay=doanh_thu_ngay,
+                           thang=thang, nam=nam)
+
+
 @login.user_loader
 def get_user_by_id(user_id):
     return dao.get_user_by_id(user_id)
