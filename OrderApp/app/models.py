@@ -50,7 +50,7 @@ class NhaHang(User):
     MST = db.Column(db.String(50))
     gio_mo_cua = db.Column(db.Time)
     gio_dong_cua = db.Column(db.Time)
-
+    dang_hoat_dong = db.Column(db.Boolean, default=True)
     __mapper_args__ = {
         'polymorphic_identity': 'nhaHang',
     }
@@ -133,7 +133,20 @@ class DanhGia(db.Model):
     mon_an_id = db.Column(db.Integer, db.ForeignKey('monAn.id'), nullable=False)
 
     mon_an = db.relationship('MonAn', backref='danh_gia', lazy=True)
+class ThongBao(db.Model):
+    __tablename__ = 'thong_bao'
 
+    id = db.Column(db.Integer, primary_key=True)
+    noi_dung = db.Column(db.String(255), nullable=False)
+    thoi_gian = db.Column(db.DateTime, default=datetime.utcnow)
+    da_doc = db.Column(db.Boolean, default=False)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Người nhận thông báo
+    mon_an_id = db.Column(db.Integer, db.ForeignKey('monAn.id'), nullable=True)
+
+    user = db.relationship('User', backref='thong_bao', lazy=True)
+    mon_an = db.relationship('MonAn', lazy=True)
+    url = db.Column(db.String(255))
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
@@ -166,6 +179,15 @@ if __name__ == '__main__':
                 adress='123 Nguyễn Văn A, TP.HCM',
                 MST='0312345678'
             )
+            nha_hang1 = NhaHang(
+                name='shop2',
+                username='shop2',
+                email='staff123@gmail.com',
+                password=hashlib.md5('123456'.encode('utf-8')).hexdigest(),
+                role=EnumRole.nhaHang,
+                adress='123 Nguyễn Văn B, TP.HCM',
+                MST='0312345678'
+            )
 
             khach_hang = User(
                 name='Khách Hàng 1',
@@ -175,13 +197,14 @@ if __name__ == '__main__':
                 role=EnumRole.khachHang
             )
 
-            db.session.add_all([admin, nha_hang, khach_hang])
+            db.session.add_all([admin, nha_hang, nha_hang1, khach_hang])
             db.session.commit()
 
         if MonAn.query.count() == 0:
             nha_hang_staff = NhaHang.query.filter_by(username='shop1').first()
+            nha_hang_staff2 = NhaHang.query.filter_by(username='shop2').first()
 
-            # Lấy các danh mục theo tên
+
             dm_khai_vi = DanhMucMonAn.query.filter_by(tenDanhMuc="Khai vị").first()
             dm_mon_chinh = DanhMucMonAn.query.filter_by(tenDanhMuc="Món chính").first()
             dm_do_chay = DanhMucMonAn.query.filter_by(tenDanhMuc="Đồ chay").first()
@@ -231,8 +254,9 @@ if __name__ == '__main__':
 
                 {"name": "Trà sữa trân châu đường đen", "gia": 30000, "dm": dm_thuc_uong,
                  "img": "https://xingfuvietnam.vn/wp-content/uploads/2023/02/xingfu-tra-sua-tran-chau-duong-den-2-FILEminimizer.jpg",
-                 "desc": "Trà sữa béo ngậy kết hợp cùng trân châu dẻo ngọt, đường đen thơm nồng."},
-
+                 "desc": "Trà sữa béo ngậy kết hợp cùng trân châu dẻo ngọt, đường đen thơm nồng."}
+            ]
+            mon_an_list2 = [
                 {"name": "Soda chanh dây", "gia": 28000, "dm": dm_thuc_uong,
                  "img": "https://product.hstatic.net/200000534989/product/soda_chanh_day_b67dce1ee92b4ce78354516caacb54ac.jpg",
                  "desc": "Soda chua ngọt kết hợp vị chanh dây, giúp tỉnh táo tức thì."},
@@ -270,6 +294,7 @@ if __name__ == '__main__':
                  "desc": "Mì cay vị Hàn Quốc với hải sản, bò, nấm và nước súp đậm đà cay nồng."}
             ]
 
+
             for mon in mon_an_list:
                 db.session.add(MonAn(
                     name=mon['name'],
@@ -278,6 +303,18 @@ if __name__ == '__main__':
                     img=mon['img'],
                     idDanhMuc=mon['dm'].id,
                     idNhaHang=nha_hang_staff.id
+                ))
+
+            db.session.commit()
+
+            for mon in mon_an_list2:
+                db.session.add(MonAn(
+                    name=mon['name'],
+                    chiTietMon=mon['desc'],
+                    gia=mon['gia'],
+                    img=mon['img'],
+                    idDanhMuc=mon['dm'].id,
+                    idNhaHang=nha_hang_staff2.id
                 ))
 
             db.session.commit()

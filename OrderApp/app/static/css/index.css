@@ -5,11 +5,11 @@
     border-top-left-radius: 0.25rem;
     border-top-right-radius: 0.25rem;
 }
-    .card-title {
+.card-title {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-
+}
     .food-card {
     border-radius: 16px;
     overflow: hidden;
@@ -46,3 +46,4 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
+

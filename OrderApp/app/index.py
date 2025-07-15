@@ -2,8 +2,8 @@ from flask import render_template, request, redirect, url_for, session, abort, j
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 
-from app import dao, app, login, db, utils
-from app.models import DanhMucMonAn, MonAn, NhaHang, EnumRole, DonHang, ChiTietDonHang, EnumStatus, DanhGia
+from app import dao, app, login, db, utils, socketio
+from app.models import DanhMucMonAn, MonAn, NhaHang, EnumRole, DonHang, ChiTietDonHang, EnumStatus, DanhGia, ThongBao
 import cloudinary.uploader
 
 from app.utils import send_gmail
@@ -11,6 +11,15 @@ from app.utils import send_gmail
 from flask import render_template, make_response
 from xhtml2pdf import pisa
 import io, os
+
+from flask_socketio import join_room
+
+@socketio.on('join')
+def handle_join(data):
+    room = data.get("room")
+    if room:
+        join_room(room)
+        print(f"Client joined room: {room}")
 
 @app.route('/xuat-bill/<int:id>')
 def xuat_bill(id):
@@ -34,8 +43,12 @@ def index():
     kw = request.args.get('kw', '')
     cates = dao.load_categories()
     foods = dao.load_foods(keyword=kw)
-    nha_hangs = dao.load_nha_hang(keyword=kw)  # tìm theo tên nhà hàng
-    return render_template('index.html', categories=cates, foods=foods, nha_hangs=nha_hangs, kw=kw)
+    return render_template('index.html', categories=cates, foods=foods, kw=kw)
+@app.route('/nha-hang', methods=['GET'])
+def danh_sach_nha_hang():
+    kw = request.args.get('kw', '')
+    nha_hangs = dao.load_nha_hang(keyword=kw)  # hàm đã có sẵn
+    return render_template('nha_hang_list.html', nha_hangs=nha_hangs, kw=kw)
 
 @app.route('/danh-muc/<int:category_id>')
 def food_by_category(category_id):
@@ -241,6 +254,8 @@ def register_nhahang():
 
 
 
+from flask_socketio import emit
+
 @app.route('/mon-an/<int:id>', methods=['GET', 'POST'])
 def chi_tiet_mon_an(id):
     mon_an = MonAn.query.get_or_404(id)
@@ -261,10 +276,34 @@ def chi_tiet_mon_an(id):
         )
         db.session.add(danh_gia)
         db.session.commit()
+
+        nha_hang_id = mon_an.idNhaHang
+        noi_dung_tb = f"{current_user.name} đã đánh giá món: {mon_an.name} ⭐ {sao}/5"
+        url = url_for('chi_tiet_mon_an', id=mon_an.id)
+
+        thong_bao = ThongBao(
+            noi_dung=noi_dung_tb,
+            user_id=nha_hang_id,
+            mon_an_id=mon_an.id,
+            url=url
+        )
+        db.session.add(thong_bao)
+        db.session.commit()
+
+        socketio.emit(
+            "thong_bao_moi",
+            {"noi_dung": noi_dung_tb,
+             "url": url
+             },
+            room=f"user_{nha_hang_id}"
+        )
+
         flash("Đánh giá đã được gửi!", "success")
         return redirect(url_for('chi_tiet_mon_an', id=mon_an.id))
 
     return render_template('monAnDetail.html', mon_an=mon_an)
+
+
 
 @app.route("/mon-an/add", methods=['GET', 'POST'])
 @login_required
@@ -373,6 +412,45 @@ def cap_nhat_nha_hang():
         return redirect(url_for("chi_tiet_nha_hang", nha_hang_id=nha_hang.id))
 
     return render_template("restaurent/nha_hang_cap_nhat.html", nha_hang=nha_hang)
+
+@app.context_processor
+def inject_thong_bao():
+    thong_bao = []
+    chua_doc = 0
+    if current_user.is_authenticated:
+        thong_bao = ThongBao.query.filter_by(user_id=current_user.id).order_by(ThongBao.thoi_gian.desc()).all()
+        chua_doc = ThongBao.query.filter_by(user_id=current_user.id, da_doc=False).count()
+
+    return dict(ds_thong_bao=thong_bao, so_thong_bao=chua_doc)
+
+@app.route("/api/nha-hang/<int:nha_hang_id>/doi-trang-thai", methods=["POST"])
+@login_required
+def doi_trang_thai_hoat_dong(nha_hang_id):
+    nha_hang = NhaHang.query.get_or_404(nha_hang_id)
+
+    if current_user.id != nha_hang.id:
+        return {"error": "Không có quyền thực hiện"}, 403
+
+    nha_hang.dang_hoat_dong = not nha_hang.dang_hoat_dong
+    db.session.commit()
+
+    return {"dang_hoat_dong": nha_hang.dang_hoat_dong}
+
+@app.route('/api/thong-bao/<int:id>/danh-dau-da-doc', methods=['POST'])
+@login_required
+def danh_dau_thong_bao(id):
+    from app.models import ThongBao
+    from app import db
+
+    tb = ThongBao.query.get(id)
+    if not tb or tb.user_id != current_user.id:
+        return jsonify({'success': False}), 403
+
+    tb.da_doc = True
+    db.session.commit()
+
+    return jsonify({'success': True})
+
 @login.user_loader
 def get_user_by_id(user_id):
     return dao.get_user_by_id(user_id)
@@ -380,4 +458,4 @@ def get_user_by_id(user_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)

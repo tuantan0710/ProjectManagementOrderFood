@@ -28,6 +28,10 @@
                     </ul>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('danh_sach_nha_hang') }}">Nhà hàng</a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link" href="/">Trợ giúp</a>
                 </li>
                 <li class="nav-item">
@@ -48,6 +52,41 @@
             0
         </span>
                     </a>
+                </li>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                <li class="nav-item dropdown mx-2">
+                    <a class="nav-link position-relative" href="#" id="thongBaoDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bell-fill fs-5"></i>
+                        <span id="badge-so-thong-bao"
+                              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                              style="font-size: 0.7rem; {% if so_thong_bao == 0 %}display: none;{% endif %}">
+    {{ so_thong_bao }}
+</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="thongBaoDropdown" id="danhSachThongBao"
+                        style="max-height: 300px; overflow-y: auto;">
+                        <li class="dropdown-header">Thông báo</li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        {% if ds_thong_bao %}
+                        {% for tb in ds_thong_bao %}
+                        <li class="dropdown-item small thong-bao-item {% if not tb.da_doc %}fw-bold{% endif %}"
+                            data-id="{{ tb.id }}" data-url="{{ tb.url }}" style="cursor: pointer;">
+                            <span>{{ tb.noi_dung }}</span><br>
+                            <small class="text-muted">{{ tb.thoi_gian.strftime('%H:%M %d/%m/%Y') }}</small>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        {% endfor %}
+
+                        {% else %}
+                        <li class="text-muted px-3">Không có thông báo nào</li>
+                        {% endif %}
+                    </ul>
                 </li>
                 {% endif %}
                 <li class="nav-item dropdown">
