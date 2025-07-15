@@ -1,15 +1,16 @@
-from flask import render_template, request, redirect, url_for, session, abort, jsonify, flash
+from flask import render_template, request, redirect, url_for, session, abort, jsonify, flash, current_app
 from flask_login import login_user, logout_user, current_user, login_required
+from werkzeug.utils import secure_filename
 
 from app import dao, app, login, db, utils
-from app.models import DanhMucMonAn, MonAn, NhaHang, EnumRole, DonHang, ChiTietDonHang, EnumStatus
+from app.models import DanhMucMonAn, MonAn, NhaHang, EnumRole, DonHang, ChiTietDonHang, EnumStatus, DanhGia
 import cloudinary.uploader
 
 from app.utils import send_gmail
 
 from flask import render_template, make_response
 from xhtml2pdf import pisa
-import io
+import io, os
 
 @app.route('/xuat-bill/<int:id>')
 def xuat_bill(id):
@@ -240,9 +241,29 @@ def register_nhahang():
 
 
 
-@app.route('/mon-an/<int:id>')
+@app.route('/mon-an/<int:id>', methods=['GET', 'POST'])
 def chi_tiet_mon_an(id):
     mon_an = MonAn.query.get_or_404(id)
+
+    if request.method == 'POST':
+        if not current_user.is_authenticated or current_user.role != EnumRole.khachHang:
+            flash("Bạn cần đăng nhập bằng tài khoản khách hàng để đánh giá.", "warning")
+            return redirect(url_for('login'))
+
+        sao = int(request.form.get('sao'))
+        content = request.form.get('content')
+
+        danh_gia = DanhGia(
+            content=content,
+            sao=sao,
+            user_id=current_user.id,
+            mon_an_id=mon_an.id
+        )
+        db.session.add(danh_gia)
+        db.session.commit()
+        flash("Đánh giá đã được gửi!", "success")
+        return redirect(url_for('chi_tiet_mon_an', id=mon_an.id))
+
     return render_template('monAnDetail.html', mon_an=mon_an)
 
 @app.route("/mon-an/add", methods=['GET', 'POST'])
@@ -291,7 +312,7 @@ def thong_ke_doanh_thu():
     if current_user.role != EnumRole.nhaHang:
         return "Không có quyền truy cập", 403
 
-    
+
     thang = request.args.get('thang', type=int) or datetime.now().month
     nam = request.args.get('nam', type=int) or datetime.now().year
 
@@ -319,8 +340,39 @@ def thong_ke_doanh_thu():
                            tong_doanh_thu=tong_doanh_thu,
                            doanh_thu_ngay=doanh_thu_ngay,
                            thang=thang, nam=nam)
+@app.route("/nha-hang/cap-nhat-thong-tin", methods=["GET", "POST"])
+@login_required
+def cap_nhat_nha_hang():
+    if current_user.role != EnumRole.nhaHang:
+        return "Không có quyền truy cập", 403
 
+    nha_hang = NhaHang.query.get(current_user.id)
 
+    if request.method == "POST":
+        # Cập nhật thông tin cơ bản
+        nha_hang.name = request.form["name"]
+        nha_hang.email = request.form["email"]
+        nha_hang.phone = request.form["phone"]
+        nha_hang.adress = request.form["adress"]
+        nha_hang.MST = request.form["MST"]
+        nha_hang.gio_mo_cua = request.form["gio_mo_cua"]
+        nha_hang.gio_dong_cua = request.form["gio_dong_cua"]
+
+        # Cập nhật ảnh đại diện nếu có
+        file = request.files.get('avt')
+        if file and file.filename != '':
+            filename = secure_filename(file.filename)
+            upload_folder = os.path.join(current_app.root_path, 'static/uploads')
+            os.makedirs(upload_folder, exist_ok=True)
+            filepath = os.path.join(upload_folder, filename)
+            file.save(filepath)
+            nha_hang.avt = url_for('static', filename=f'uploads/{filename}')
+
+        db.session.commit()
+        flash("Cập nhật thông tin thành công!", "success")
+        return redirect(url_for("chi_tiet_nha_hang", nha_hang_id=nha_hang.id))
+
+    return render_template("restaurent/nha_hang_cap_nhat.html", nha_hang=nha_hang)
 @login.user_loader
 def get_user_by_id(user_id):
     return dao.get_user_by_id(user_id)

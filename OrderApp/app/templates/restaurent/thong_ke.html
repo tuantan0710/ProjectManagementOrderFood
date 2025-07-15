@@ -29,15 +29,6 @@
 
 <hr>
 
-<h5>Chi tiết đơn hàng đã giao:</h5>
-<ul class="list-group">
-    {% for dh in don_hang %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        Mã đơn: {{ dh.id }} - {{ dh.thoiGian.strftime("%d/%m/%Y") }}
-        <span>{{ "{:,.0f}".format(dh.tongGia) }} VND</span>
-    </li>
-    {% endfor %}
-</ul>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
