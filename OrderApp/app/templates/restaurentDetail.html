@@ -14,6 +14,23 @@
             <p><strong>Địa chỉ:</strong> {{ nha_hang.adress }}</p>
             <p><strong>Mã số thuế:</strong> {{ nha_hang.MST }}</p>
             <p><strong>Giờ mở cửa:</strong> {{ nha_hang.gio_mo_cua }} - {{ nha_hang.gio_dong_cua }}</p>
+            <p>
+                <strong>Trạng thái:</strong>
+                <span id="trangThaiHoatDong"
+                      class="{{ 'text-success' if nha_hang.dang_hoat_dong else 'text-danger' }}">
+        {{ 'Đang hoạt động' if nha_hang.dang_hoat_dong else 'Đã đóng cửa' }}
+    </span>
+            </p>
+
+            {% if current_user.is_authenticated and current_user.role.value == 'nhaHang' and current_user.id ==
+            nha_hang.id %}
+            <div class="mt-2">
+                <button class="btn btn-outline-secondary btn-sm" onclick="doiTrangThaiHoatDong({{ nha_hang.id }})"
+                        id="btnDoiTrangThai">
+                    {{ 'Đóng quán' if nha_hang.dang_hoat_dong else 'Mở quán' }}
+                </button>
+            </div>
+            {% endif %}
 
             {% if current_user.is_authenticated and current_user.role.value == 'nhaHang' and current_user.id ==
             nha_hang.id %}

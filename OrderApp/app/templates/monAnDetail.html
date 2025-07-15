@@ -15,7 +15,9 @@
             <p class="text-muted mb-1"><strong>Danh mục:</strong> {{ mon_an.danh_muc.tenDanhMuc }}</p>
             <p><strong>Giá:</strong> <span class="text-danger h5">{{ "{:,.0f}".format(mon_an.gia) }} đ</span></p>
             <p><strong>Tình trạng:</strong>
-                {% if mon_an.tinhTrang %}
+                {% if not mon_an.nha_hang.dang_hoat_dong %}
+                <span class="badge bg-danger">Nhà hàng đã đóng cửa</span>
+                {% elif mon_an.tinhTrang %}
                 <span class="badge bg-success">Đang bán</span>
                 {% else %}
                 <span class="badge bg-secondary">Ngừng bán</span>
