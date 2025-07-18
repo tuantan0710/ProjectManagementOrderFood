@@ -284,7 +284,6 @@ def chi_tiet_mon_an(id):
         thong_bao = ThongBao(
             noi_dung=noi_dung_tb,
             user_id=nha_hang_id,
-            mon_an_id=mon_an.id,
             url=url
         )
         db.session.add(thong_bao)

@@ -23,7 +23,7 @@ class User(db.Model, UserMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    username = db.Column(db.String(50), nullable=False)
+    username = db.Column(db.String(50), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100))
     avt = db.Column(db.String(255))
@@ -53,8 +53,6 @@ class NhaHang(User):
         'polymorphic_identity': 'nhaHang',
     }
 
-    don_hang = db.relationship('DonHang', backref='nha_hang', lazy=True)
-    gio_hang = db.relationship('GioHang', backref='nha_hang', lazy=True)
     mon_an = db.relationship('MonAn', backref='nha_hang', lazy=True)
 
 # ---------------- CÁC MODEL KHÁC ----------------
@@ -87,6 +85,7 @@ class GioHang(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     userId = db.Column(db.Integer, db.ForeignKey('user.id'))
+    is_active = db.Column(db.Boolean, default=True)
     time = db.Column(db.DateTime, default=datetime.utcnow)
 
     chi_tiet_gio_hang = db.relationship('ChiTietGioHang', backref='gio_hang', lazy=True)
@@ -137,11 +136,10 @@ class ThongBao(db.Model):
     thoi_gian = db.Column(db.DateTime, default=datetime.utcnow)
     da_doc = db.Column(db.Boolean, default=False)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Người nhận thông báo
-    mon_an_id = db.Column(db.Integer, db.ForeignKey('monAn.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
 
     user = db.relationship('User', backref='thong_bao', lazy=True)
-    mon_an = db.relationship('MonAn', lazy=True)
     url = db.Column(db.String(255))
 if __name__ == '__main__':
     with app.app_context():
