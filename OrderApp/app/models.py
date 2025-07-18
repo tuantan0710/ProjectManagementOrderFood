@@ -37,8 +37,19 @@ class User(db.Model, UserMixin):
     }
 
     danh_gia = db.relationship('DanhGia', backref='user', lazy=True)
-    gio_hang = db.relationship('GioHang', backref='user', lazy=True)
-    don_hang = db.relationship('DonHang', backref='khach_hang', lazy=True)
+    gdon_hang_khach = db.relationship(
+        'DonHang',
+        backref='khach_hang',
+        lazy=True,
+        foreign_keys='DonHang.idKH'
+    )
+
+    don_hang_nha_hang = db.relationship(
+        'DonHang',
+        backref='nha_hang',
+        lazy=True,
+        foreign_keys='DonHang.idNhaHang'
+    )
 
 class NhaHang(User):
     __tablename__ = 'nhaHang'
@@ -106,6 +117,7 @@ class DonHang(db.Model):
     trangThai = db.Column(db.Enum(EnumStatus), default=EnumStatus.cho)
     thoiGian = db.Column(db.DateTime, default=datetime.utcnow)
     tongGia = db.Column(db.Float)
+    idNhaHang = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     chi_tiet_don_hang = db.relationship('ChiTietDonHang', backref='don_hang', lazy=True)
 
@@ -334,6 +346,43 @@ if __name__ == '__main__':
             )
 
             db.session.add_all([dg1, dg2])
+            db.session.commit()
+        if DonHang.query.count() == 0:
+            khach_hang = User.query.filter_by(username='kh01').first()
+
+            # Lấy một vài món ăn mẫu
+            mon1 = MonAn.query.filter_by(name='Phở bò tái').first()
+            mon2 = MonAn.query.filter_by(name='Cơm tấm sườn bì').first()
+            mon3 = MonAn.query.filter_by(name='Trà đào cam sả').first()
+
+            # Đơn hàng 1
+            dh1 = DonHang(
+                idKH=khach_hang.id,
+                idNhaHang=2,
+                trangThai=EnumStatus.daXacNhan,
+                tongGia=mon1.gia * 2 + mon3.gia,
+                thoiGian=datetime(2024, 5, 10, 11, 30)
+            )
+            db.session.add(dh1)
+            db.session.flush()  # lấy id đơn hàng trước khi thêm chi tiết
+
+            ctdh1_1 = ChiTietDonHang(idDH=dh1.id, idMonAn=mon1.id, soLuong=2)
+            ctdh1_2 = ChiTietDonHang(idDH=dh1.id, idMonAn=mon3.id, soLuong=1)
+
+            # Đơn hàng 2
+            dh2 = DonHang(
+                idKH=khach_hang.id,
+                idNhaHang=2,
+                trangThai=EnumStatus.daGiao,
+                tongGia=mon2.gia,
+                thoiGian=datetime(2024, 6, 2, 18, 15)
+            )
+            db.session.add(dh2)
+            db.session.flush()
+
+            ctdh2_1 = ChiTietDonHang(idDH=dh2.id, idMonAn=mon2.id, soLuong=1)
+
+            db.session.add_all([ctdh1_1, ctdh1_2, ctdh2_1])
             db.session.commit()
 
 
