@@ -5,8 +5,6 @@ from app import app, db
 import hashlib
 from flask_login import UserMixin
 
-# ---------------- ENUM ----------------
-
 class EnumRole(Enum):
     khachHang = "khachHang"
     nhaHang = "nhaHang"
@@ -18,7 +16,7 @@ class EnumStatus(Enum):
     daHuy = "Đã hủy"
     daGiao = "Đã giao cho vận chuyển"
 
-# ---------------- USER + KẾ THỪA ----------------
+
 
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
@@ -89,7 +87,6 @@ class GioHang(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     userId = db.Column(db.Integer, db.ForeignKey('user.id'))
-    nhaHangId = db.Column(db.Integer, db.ForeignKey('nhaHang.id'))
     time = db.Column(db.DateTime, default=datetime.utcnow)
 
     chi_tiet_gio_hang = db.relationship('ChiTietGioHang', backref='gio_hang', lazy=True)
@@ -107,7 +104,6 @@ class DonHang(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     idKH = db.Column(db.Integer, db.ForeignKey('user.id'))
-    idNhaHang = db.Column(db.Integer, db.ForeignKey('nhaHang.id'))
     trangThai = db.Column(db.Enum(EnumStatus), default=EnumStatus.cho)
     thoiGian = db.Column(db.DateTime, default=datetime.utcnow)
     tongGia = db.Column(db.Float)
