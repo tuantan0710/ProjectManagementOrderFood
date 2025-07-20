@@ -1,0 +1,16 @@
+<p><strong>Mã đơn hàng:</strong> {{ don_hang.id }}</p>
+<p><strong>Khách hàng:</strong> {{ don_hang.khach_hang.name }}</p>
+<p><strong>Thời gian:</strong> {{ don_hang.thoiGian.strftime("%d/%m/%Y %H:%M") }}</p>
+<p><strong>Tổng giá:</strong> {{ "{:,.0f}".format(don_hang.tongGia) }} đ</p>
+<p><strong>Trạng thái:</strong> {{ don_hang.trangThai.value }}</p>
+
+<hr>
+<h5>Chi tiết món ăn:</h5>
+<ul class="list-group">
+  {% for ct in don_hang.chi_tiet_don_hang %}
+    <li class="list-group-item d-flex justify-content-between">
+      <span>{{ ct.mon_an.name }} (x{{ ct.soLuong }})</span>
+      <span>{{ "{:,.0f}".format(ct.mon_an.gia * ct.soLuong) }} đ</span>
+    </li>
+  {% endfor %}
+</ul>
