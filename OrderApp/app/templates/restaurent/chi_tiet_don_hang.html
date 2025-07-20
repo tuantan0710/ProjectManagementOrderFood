@@ -1,0 +1,89 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<main class="container mt-4">
+    <h2 class="mb-4">Chi tiết đơn hàng #{{ don_hang.id }}</h2>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <p><strong>Khách hàng:</strong> {{ don_hang.khach_hang.name }}</p>
+            <p><strong>Email:</strong> {{ don_hang.khach_hang.email or 'Không có' }}</p>
+            <p><strong>Thời gian đặt:</strong> {{ don_hang.thoiGian.strftime("%H:%M:%S %d/%m/%Y") }}</p>
+            <p><strong>Trạng thái:</strong>
+                <span class="badge bg-primary">{{ don_hang.trangThai.value }}</span>
+            </p>
+            <p><strong>Tổng giá:</strong> <span
+                    class="text-danger fw-bold">{{ "{:,.0f}".format(don_hang.tongGia) }} đ</span></p>
+        </div>
+    </div>
+
+    <h4>Danh sách món ăn</h4>
+    <table class="table table-bordered">
+        <thead class="table-light">
+        <tr>
+            <th>#</th>
+            <th>Món ăn</th>
+            <th>Số lượng</th>
+            <th>Đơn giá</th>
+            <th>Thành tiền</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for ct in don_hang.chi_tiet_don_hang %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ ct.mon_an.name }}</td>
+            <td>{{ ct.soLuong }}</td>
+            <td>{{ "{:,.0f}".format(ct.mon_an.gia) }} đ</td>
+            <td>{{ "{:,.0f}".format(ct.mon_an.gia * ct.soLuong) }} đ</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% if current_user.role.value == 'nhaHang' %}
+    <div class="mt-4">
+        <form method="post">
+            <div class="mb-3">
+                <label for="trangThai" class="form-label">Trạng thái</label>
+                <select name="trangThai" id="trangThai" class="form-select" required onchange="handleChange(this)">
+                    <option value="cho" {% if don_hang.trangThai.name==
+                    'cho' %}selected{% endif %}>Đang chờ</option>
+                    <option value="daXacNhan" {% if don_hang.trangThai.name==
+                    'daXacNhan' %}selected{% endif %}>Đã xác nhận</option>
+                    <option value="daGiao" {% if don_hang.trangThai.name==
+                    'daGiao' %}selected{% endif %}>Đã giao</option>
+                    <option value="daHuy" {% if don_hang.trangThai.name==
+                    'daHuy' %}selected{% endif %}>Đã hủy</option>
+                </select>
+            </div>
+
+            <div class="mb-3" id="lyDoHuyDiv" style="display: none;">
+                <label for="noiDungHuy" class="form-label">Lý do hủy đơn</label>
+                <textarea name="noiDungHuy" id="noiDungHuy" class="form-control"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+        </form>
+
+        <script>
+            function handleChange(select) {
+                const div = document.getElementById('lyDoHuyDiv');
+                if (select.value === 'daHuy') {
+                    div.style.display = 'block';
+                } else {
+                    div.style.display = 'none';
+                }
+            }
+
+            // Gọi ngay nếu đã chọn "daHuy" khi load lại
+            document.addEventListener('DOMContentLoaded', function () {
+                handleChange(document.getElementById('trangThai'));
+            });
+        </script>
+
+    </div>
+
+    {% endif %}
+</main>
+{% endblock %}

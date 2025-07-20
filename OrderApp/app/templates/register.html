@@ -1,0 +1,63 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<main class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">ĐĂNG KÝ TÀI KHOẢN</h4>
+                </div>
+                <div class="card-body">
+                    {% if err_msg %}
+                        <div class="alert alert-danger">{{ err_msg }}</div>
+                    {% endif %}
+
+                    <form method="post" action="/register" enctype="multipart/form-data">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Họ tên" required>
+                            <label for="name"><i class="bi bi-person-fill"></i> Họ tên</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Tên đăng nhập" required>
+                            <label for="username"><i class="bi bi-person-circle"></i> Tên đăng nhập</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+                            <label for="email"><i class="bi bi-envelope-fill"></i> Email</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Mật khẩu" required>
+                            <label for="password"><i class="bi bi-lock-fill"></i> Mật khẩu</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="confirm" name="confirm" placeholder="Xác nhận mật khẩu" required>
+                            <label for="confirm"><i class="bi bi-check-circle-fill"></i> Xác nhận mật khẩu</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="avt" class="form-label"><i class="bi bi-image-fill"></i> Ảnh đại diện</label>
+                            <input type="file" class="form-control" id="avt" name="avt" accept="image/*">
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-person-plus-fill"></i> Đăng ký
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mt-3">
+    <a href="/register-nhahang" class="btn btn-outline-success">
+        <i class="bi bi-shop"></i> Đăng ký tài khoản nhà hàng
+    </a>
+</div>
+</main>
+{% endblock %}

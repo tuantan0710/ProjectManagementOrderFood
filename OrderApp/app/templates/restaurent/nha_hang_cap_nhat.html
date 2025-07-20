@@ -1,0 +1,70 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<main class="container mt-5">
+    <h2 class="mb-4">Cập nhật thông tin nhà hàng</h2>
+
+    <!-- QUAN TRỌNG: enctype để upload ảnh -->
+    <form method="POST" enctype="multipart/form-data" class="row g-3">
+
+        <div class="col-md-6">
+            <label for="name" class="form-label">Tên nhà hàng</label>
+            <input type="text" class="form-control" name="name" id="name"
+                   value="{{ nha_hang.name }}" required>
+        </div>
+
+        <div class="col-md-6">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" name="email" id="email"
+                   value="{{ nha_hang.email }}">
+        </div>
+
+        <div class="col-md-6">
+            <label for="phone" class="form-label">Số điện thoại</label>
+            <input type="text" class="form-control" name="phone" id="phone"
+                   value="{{ nha_hang.phone }}">
+        </div>
+
+        <div class="col-md-6">
+            <label for="MST" class="form-label">Mã số thuế</label>
+            <input type="text" class="form-control" name="MST" id="MST"
+                   value="{{ nha_hang.MST }}">
+        </div>
+
+        <div class="col-12">
+            <label for="adress" class="form-label">Địa chỉ</label>
+            <input type="text" class="form-control" name="adress" id="adress"
+                   value="{{ nha_hang.adress }}">
+        </div>
+
+        <div class="col-md-6">
+            <label for="gio_mo_cua" class="form-label">Giờ mở cửa</label>
+            <input type="time" class="form-control" name="gio_mo_cua" id="gio_mo_cua"
+                   value="{{ nha_hang.gio_mo_cua.strftime('%H:%M') if nha_hang.gio_mo_cua }}">
+        </div>
+
+        <div class="col-md-6">
+            <label for="gio_dong_cua" class="form-label">Giờ đóng cửa</label>
+            <input type="time" class="form-control" name="gio_dong_cua" id="gio_dong_cua"
+                   value="{{ nha_hang.gio_dong_cua.strftime('%H:%M') if nha_hang.gio_dong_cua }}">
+        </div>
+
+        <div class="col-12">
+            <label for="avt" class="form-label">Ảnh đại diện</label><br>
+            {% if nha_hang.avt %}
+            <img src="{{ nha_hang.avt }}" alt="Avatar" class="img-thumbnail mb-2" width="120">
+            {% endif %}
+            <input class="form-control" type="file" name="avt" id="avt" accept="image/*">
+        </div>
+
+        <div class="col-12 mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-1"></i> Lưu thay đổi
+            </button>
+            <a href="{{ url_for('chi_tiet_nha_hang', nha_hang_id=nha_hang.id) }}" class="btn btn-secondary">
+                Hủy
+            </a>
+        </div>
+    </form>
+</main>
+{% endblock %}
