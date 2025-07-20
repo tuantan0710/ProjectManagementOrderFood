@@ -5,35 +5,35 @@
     <h2 class="mb-4">Quản lý đơn hàng</h2>
 
     <form method="get" class="row g-3 mb-4">
-        <div class="col-md-4">
-            <label class="form-label">Lọc theo trạng thái</label>
-            <select name="trang_thai" class="form-select">
-                <option value="">-- Tất cả --</option>
-                <option value="cho" {{
-                'selected' if trang_thai_hien_tai == 'cho' else '' }}>Đang chờ</option>
-                <option value="daXacNhan" {{
-                'selected' if trang_thai_hien_tai == 'daXacNhan' else '' }}>Đã xác nhận</option>
-                <option value="daGiao" {{
-                'selected' if trang_thai_hien_tai == 'daGiao' else '' }}>Đã giao</option>
-                <option value="daHuy" {{
-                'selected' if trang_thai_hien_tai == 'daHuy' else '' }}>Đã hủy</option>
-            </select>
-        </div>
+    <div class="col-md-3">
+        <label class="form-label">ID đơn hàng</label>
+        <input type="number" name="ma_don" class="form-control" value="{{ ma_don_hien_tai or '' }}">
+    </div>
 
-        <div class="col-md-4">
-            <label class="form-label">Sắp xếp theo thời gian</label>
-            <select name="sap_xep" class="form-select">
-                <option value="desc" {{
-                'selected' if sap_xep_hien_tai == 'desc' else '' }}>Mới nhất</option>
-                <option value="asc" {{
-                'selected' if sap_xep_hien_tai == 'asc' else '' }}>Cũ nhất</option>
-            </select>
-        </div>
+    <div class="col-md-3">
+        <label class="form-label">Lọc theo trạng thái</label>
+        <select name="trang_thai" class="form-select">
+            <option value="">-- Tất cả --</option>
+            <option value="cho" {{ 'selected' if trang_thai_hien_tai == 'cho' else '' }}>Đang chờ</option>
+            <option value="daXacNhan" {{ 'selected' if trang_thai_hien_tai == 'daXacNhan' else '' }}>Đã xác nhận</option>
+            <option value="daGiao" {{ 'selected' if trang_thai_hien_tai == 'daGiao' else '' }}>Đã giao</option>
+            <option value="daHuy" {{ 'selected' if trang_thai_hien_tai == 'daHuy' else '' }}>Đã hủy</option>
+        </select>
+    </div>
 
-        <div class="col-md-4 d-flex align-items-end">
-            <button type="submit" class="btn btn-primary w-100">Lọc</button>
-        </div>
-    </form>
+    <div class="col-md-3">
+        <label class="form-label">Sắp xếp theo thời gian</label>
+        <select name="sap_xep" class="form-select">
+            <option value="desc" {{ 'selected' if sap_xep_hien_tai == 'desc' else '' }}>Mới nhất</option>
+            <option value="asc" {{ 'selected' if sap_xep_hien_tai == 'asc' else '' }}>Cũ nhất</option>
+        </select>
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Lọc</button>
+    </div>
+</form>
+
 
     {% if don_hang %}
     <div class="table-responsive">
@@ -46,6 +46,7 @@
                 <th>Tổng giá</th>
                 <th>Trạng thái</th>
                 <th>Chi tiết</th>
+                <th>Thao tác</th>
             </tr>
             </thead>
             <tbody>
@@ -66,10 +67,30 @@
                         </span>
                 </td>
                 <td>
-                    <a href="{{ url_for('chi_tiet_don_hang', id=dh.id) }}" class="btn btn-sm btn-primary">Xem</a>
-                    <a href="{{ url_for('xuat_bill', id=dh.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                    <button class="btn btn-sm btn-primary btn-xem" data-id="{{ dh.id }}">Xem</button>
+
+                    <a href="{{ url_for('xuat_bill', id=dh.id) }}" class="btn btn-sm btn-outline-secondary"
+                       target="_blank">
                         Hóa đơn <i class="bi bi-file-earmark-pdf"></i>
                     </a>
+                </td>
+                <td>
+                     {% if dh.trangThai.name == 'cho' %}
+                    <form action="{{ url_for('xac_nhan_don', id=dh.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-success">Xác nhận</button>
+                    </form>
+                    {% elif dh.trangThai.name == 'daXacNhan' %}
+
+                    <form action="{{ url_for('giao_don', id=dh.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-warning">Giao hàng</button>
+                    </form>
+                    {% endif %}
+
+                    {% if dh.trangThai.name != 'daGiao' %}
+                    <button class="btn btn-danger btn-sm btn-huy-don" data-id="{{ dh.id }}">
+                        Hủy đơn
+                    </button>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -79,5 +100,66 @@
     {% else %}
     <div class="alert alert-info">Chưa có đơn hàng nào.</div>
     {% endif %}
+
+    <!-- Modal chi tiết đơn hàng -->
+    <div class="modal fade" id="chiTietModal" tabindex="-1" aria-labelledby="chiTietModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="chiTietModalLabel">Chi tiết đơn hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body" id="chiTietModalBody">
+                    <!-- Nội dung sẽ được nạp bằng AJAX -->
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+<hr class="mt-5 mb-4">
+<h4>Tổng hợp món trong các đơn đang chờ</h4>
+{% if tong_mon_dang_cho %}
+<ul class="list-group">
+    {% for mon, so_luong in tong_mon_dang_cho.items() %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        {{ mon }}
+        <span class="badge bg-primary rounded-pill">{{ so_luong }}</span>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<div class="alert alert-info mt-3">Không có đơn hàng nào đang chờ.</div>
+{% endif %}
+
+
+<div class="modal fade" id="modalHuyDon" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" id="formHuyDon">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Xác nhận hủy đơn hàng</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="id_don_hang" id="inputDonHangId">
+          <div class="mb-3">
+            <label class="form-label">Lý do hủy:</label>
+            <textarea name="ly_do_huy" class="form-control" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 {% endblock %}

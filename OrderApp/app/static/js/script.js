@@ -153,3 +153,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-xem').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
+            const modalBody = document.getElementById('chiTietModalBody');
+
+            // Hiện spinner loading
+            modalBody.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                </div>
+            `;
+
+            // Mở modal
+            var chiTietModal = new bootstrap.Modal(document.getElementById('chiTietModal'));
+            chiTietModal.show();
+
+            // Gửi yêu cầu AJAX
+            fetch(`/chi-tiet-don-hang-modal/${id}`)
+                .then(response => response.text())
+                .then(data => {
+                    modalBody.innerHTML = data;
+                })
+                .catch(error => {
+                    modalBody.innerHTML = `<div class="alert alert-danger">Lỗi khi tải dữ liệu.</div>`;
+                    console.error('Lỗi:', error);
+                });
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = new bootstrap.Modal(document.getElementById('modalHuyDon'));
+  const form = document.getElementById('formHuyDon');
+  const inputId = document.getElementById('inputDonHangId');
+
+  document.querySelectorAll('.btn-huy-don').forEach(button => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.id;
+      inputId.value = id;
+      form.action = `/don-hang/${id}/huy`;  // Gán action động
+      modal.show();
+    });
+  });
+});

@@ -153,20 +153,24 @@ def edit_food(food_id):
 
     return render_template('restaurent/edit_food.html', food=mon)
 
+from collections import defaultdict
+
 @app.route("/nha-hang/don-hang")
 @login_required
 def quan_ly_don_hang():
     if current_user.role != EnumRole.nhaHang:
         return "Bạn không có quyền truy cập", 403
 
+    trang_thai = request.args.get("trang_thai")
+    sap_xep = request.args.get("sap_xep", "desc")
+    ma_don = request.args.get("ma_don", type=int)
 
-    trang_thai = request.args.get("trang_thai")  # VD: 'daXacNhan'
-    sap_xep = request.args.get("sap_xep", "desc")  # asc hoặc desc
+    query = DonHang.query.filter(DonHang.idNhaHang == current_user.id)
 
-    query = DonHang.query.filter_by(idNhaHang=current_user.id)
+    if ma_don:
+        query = query.filter(DonHang.id == ma_don)
 
     if trang_thai:
-        from app.models import EnumStatus
         try:
             query = query.filter(DonHang.trangThai == EnumStatus[trang_thai])
         except KeyError:
@@ -179,13 +183,59 @@ def quan_ly_don_hang():
 
     don_hang = query.all()
 
+    # Tổng hợp món từ các đơn "chờ"
+    mon_dang_cho = defaultdict(int)
+    don_cho = DonHang.query.filter(
+        DonHang.idNhaHang == current_user.id,
+        DonHang.trangThai == EnumStatus.cho
+    ).all()
+
+    for dh in don_cho:
+        for ct in dh.chi_tiet_don_hang:
+            mon_dang_cho[ct.mon_an.name] += ct.soLuong
+
     return render_template(
         "restaurent/quan_ly_don_hang.html",
         don_hang=don_hang,
         trang_thai_hien_tai=trang_thai,
-        sap_xep_hien_tai=sap_xep
+        sap_xep_hien_tai=sap_xep,
+        ma_don_hien_tai=ma_don,
+        tong_mon_dang_cho=mon_dang_cho
     )
 
+@app.route('/chi-tiet-don-hang-modal/<int:id>')
+def chi_tiet_don_hang_modal(id):
+    don_hang = DonHang.query.get_or_404(id)
+    return render_template('restaurent/chi_tiet_modal.html', don_hang=don_hang)
+@app.post('/don-hang/<int:id>/xac-nhan')
+@login_required
+def xac_nhan_don(id):
+    don = DonHang.query.get_or_404(id)
+    if don.trangThai.name == 'cho':
+        don.trangThai = EnumStatus.daXacNhan
+        db.session.commit()
+    return redirect(url_for('quan_ly_don_hang'))
+
+
+@app.post('/don-hang/<int:id>/giao')
+@login_required
+def giao_don(id):
+    don = DonHang.query.get_or_404(id)
+    if don.trangThai.name == 'daXacNhan':
+        don.trangThai = EnumStatus.daGiao
+        db.session.commit()
+    return redirect(url_for('quan_ly_don_hang'))
+
+
+@app.route('/don-hang/<int:id>/huy', methods=['POST'])
+def huy_don(id):
+    ly_do = request.form.get('ly_do_huy')
+    don_hang = DonHang.query.get_or_404(id)
+    don_hang.trangThai = EnumStatus.DA_HUY
+    don_hang.ly_do_huy = ly_do
+    db.session.commit()
+    flash('Đã hủy đơn hàng.', 'success')
+    return redirect(url_for('danh_sach_don_hang'))
 @app.route('/nha-hang/don-hang/<int:id>', methods=['GET', 'POST'])
 @login_required
 def chi_tiet_don_hang(id):
