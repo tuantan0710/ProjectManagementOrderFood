@@ -44,12 +44,12 @@
                 {% if current_user.role.value == 'khachHang' %}
                 <li class="nav-item mx-2 position-relative">
                     <a class="nav-link position-relative px-3 py-2 rounded bg-light shadow-sm d-flex align-items-center justify-content-center"
-                       href="/" title="Giỏ hàng"
+                       href="/cart" title="Giỏ hàng"
                        style="transition: all 0.3s ease;">
                         <i class="bi bi-bag-check-fill fs-5 text-primary"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white cartCounter "
                               style="font-size: 0.7rem; min-width: 20px; height: 20px; line-height: 20px; padding: 0 6px;">
-            0
+           {{cart_stats.total_quantity}}
         </span>
                     </a>
                 </li>

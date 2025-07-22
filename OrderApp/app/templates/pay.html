@@ -1,0 +1,125 @@
+{% extends 'layout/base.html' %}
+{% block title %}Thanh Toán{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- Bước tiến trình -->
+  <div class="mb-4 text-center">
+    <div class="d-flex justify-content-center">
+      <div class="mx-3 text-primary"><strong>1</strong> Đăng nhập</div>
+      <div class="mx-3 text-primary"><strong>2</strong> Địa chỉ</div>
+      <div class="mx-3 text-danger"><strong>3</strong> Thanh toán</div>
+    </div>
+  </div>
+
+  <form method="POST" action="/payment">
+    <div class="row">
+      <!-- Bên trái -->
+      <div class="col-md-7">
+        <!-- Địa chỉ giao hàng -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Địa chỉ giao hàng</h5>
+          </div>
+          <div class="card-body">
+            {% if addresses %}
+              {% for address in addresses %}
+                <div class="border rounded p-3 mb-3 bg-white">
+                  <p><strong>{{ address.full_name }}</strong></p>
+                  <p><i class="fas fa-map-marker-alt text-danger"></i> {{ address.address }}, {{ address.ward }}, {{ address.state }}, {{ address.city }}</p>
+                  <p><i class="fas fa-phone"></i> {{ address.phone_number }}</p>
+                  {% if address.is_default %}
+                    <span class="badge bg-success">Mặc định</span>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="alert alert-warning">
+                Bạn chưa có địa chỉ giao hàng. <a href="{{ url_for('add_address') }}">Thêm địa chỉ</a>.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Phương thức thanh toán -->
+         <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">Phương thức thanh toán</h5>
+
+    </div>
+    <div class="card-body">
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="cod" checked>
+        <label class="form-check-label" for="cod">Thanh toán khi nhận hàng</label>
+      </div>
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="radio" name="paymentMethod" id="vnpay" value="vnpay">
+        <label class="form-check-label" for="vnpay">Thanh toán bằng VNPay</label>
+      </div>
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="radio" name="paymentMethod" id="momo" value="momo" >
+        <label class="form-check-label" for="momo">Thanh toán qua MoMo</label>
+      </div>
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="radio" name="paymentMethod" id="bank" value="bank" >
+        <label class="form-check-label" for="bank">Chuyển khoản ngân hàng</label>
+      </div>
+    </div>
+  </div>
+
+
+        <!-- Ghi chú đơn hàng -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Ghi chú cho đơn hàng</h5>
+          </div>
+          <div class="card-body">
+            <textarea name="note" class="form-control" rows="3" placeholder="Ví dụ: Giao giờ nghỉ trưa, không gọi điện, thêm đũa..."></textarea>
+          </div>
+        </div>
+
+        <!-- Nút đặt hàng -->
+        <button type="submit" class="btn btn-danger w-100">Hoàn tất đặt hàng</button>
+      </div>
+
+      <!-- Bên phải -->
+      <div class="col-md-5">
+        <div class="card shadow-sm">
+          <div class="card-header bg-light text-center">
+            <h5 class="mb-0">Đơn hàng của bạn</h5>
+          </div>
+          <div class="card-body">
+            {% for c in session['cart'].values() %}
+              <div class="d-flex align-items-center mb-3">
+                <img src="{{ c['img'] if c['img'].startswith('http') else url_for('static', filename=c['img']) }}"
+                     alt="{{ c['name'] }}"
+                     class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                <div class="ml-3">
+                  <h6 class="mb-1">{{ c['name'] }}</h6>
+                  <small>Số lượng: {{ c['quantity'] }}</small><br>
+                  <small>Giá: {{ c['gia'] | float | round(0) }}đ</small>
+                </div>
+              </div>
+              <hr>
+            {% endfor %}
+
+            <div class="d-flex justify-content-between">
+              <span>Tạm tính:</span>
+              <strong>{{ cart_stats.total_amount | float | round(0) }}đ</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>Phí vận chuyển:</span>
+              <strong>15.000đ</strong>
+            </div>
+            <div class="d-flex justify-content-between border-top pt-2 mt-2 font-weight-bold">
+              <span>Thành tiền:</span>
+              <span class="text-danger">{{ cart_stats.total_amount + 15000 | int }}đ (Đã VAT)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+{% endblock %}

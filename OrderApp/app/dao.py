@@ -1,4 +1,4 @@
-from app.models import DanhMucMonAn, MonAn, User, NhaHang, EnumRole
+from app.models import DanhMucMonAn, MonAn, User, NhaHang, EnumRole,DeliveryAddress
 import hashlib
 import cloudinary.uploader
 from app import app, db
@@ -70,3 +70,15 @@ def load_nha_hang(keyword=None):
         query = query.filter((NhaHang.name.ilike(keyword)) | (NhaHang.username.ilike(keyword)))
 
     return query.all()
+def count_cart(cart):
+    total_quantity,total_amount=0,0
+    if cart:
+        for c in cart.values():
+            total_quantity+=c['quantity']
+            total_amount+=c['quantity']*c['gia']
+    return {
+        "total_amount":total_amount,
+        "total_quantity":total_quantity
+    }
+def get_user_addresses(user_id):
+    return db.session.query(DeliveryAddress).filter(DeliveryAddress.user_id == user_id).all()

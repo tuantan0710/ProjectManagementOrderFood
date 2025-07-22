@@ -140,6 +140,7 @@ class DanhGia(db.Model):
     mon_an_id = db.Column(db.Integer, db.ForeignKey('monAn.id'), nullable=False)
 
     mon_an = db.relationship('MonAn', backref='danh_gia', lazy=True)
+
 class ThongBao(db.Model):
     __tablename__ = 'thong_bao'
 
@@ -153,6 +154,24 @@ class ThongBao(db.Model):
 
     user = db.relationship('User', backref='thong_bao', lazy=True)
     url = db.Column(db.String(255))
+class DeliveryAddress(db.Model):
+    __tablename__ = 'delivery_address'
+
+    id = db.Column(db.Integer, primary_key=True)
+    full_name = db.Column(db.String(100), nullable=False)
+    phone_number = db.Column(db.String(15), nullable=False)
+    address = db.Column(db.String(255), nullable=False)
+    city = db.Column(db.String(50), nullable=False)
+    state = db.Column(db.String(50), nullable=True)
+    ward = db.Column(db.String(50), nullable=True)
+    country = db.Column(db.String(50), nullable=False, default="Vietnam")
+    is_default = db.Column(db.Boolean, default=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    user = db.relationship('User', backref='delivery_addresses', lazy=True)
+
+    def __str__(self):
+        return f"{self.full_name}, {self.address}, {self.city}, {self.country}"
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
