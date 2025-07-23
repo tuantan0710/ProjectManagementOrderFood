@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="97e53f96-3b7a-4242-89b8-2717e42be005" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/OrderApp/.idea/OrderApp.iml" beforeDir="false" afterPath="$PROJECT_DIR$/OrderApp/.idea/OrderApp.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/OrderApp/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/OrderApp/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/OrderApp/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/OrderApp/app/__init__.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 3
+}]]></component>
+  <component name="ProjectId" id="307pGqwRvBRX4FpPZXLN69JW13c" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "AnhTuan",
+    "last_opened_file_path": "D:/ProjectManagementOrderFood/ProjectManagementOrderFood/OrderApp"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-fb887030ada0-aa17d162503b-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-243.21565.199" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="97e53f96-3b7a-4242-89b8-2717e42be005" name="Changes" comment="" />
+      <created>1752988372654</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1752988372654</updated>
+    </task>
+    <servers />
+  </component>
+</project>

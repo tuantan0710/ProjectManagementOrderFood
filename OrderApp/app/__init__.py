@@ -9,7 +9,8 @@ import cloudinary
 
 app = Flask(__name__)
 app.secret_key = 'JKDFKDFNEI4**7tyB^^b9HNJDFICB2@@@'
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/fooddb?charset=utf8mb4" % quote('Tuan@123')
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/fooddb?charset=utf8mb4" % quote('123456')
+# app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://root:Admin123@localhost/fooddb?charset=utf8mb4'
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 db = SQLAlchemy(app)
@@ -21,7 +22,11 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'nguyentrunganhtuan201004@gmail.com'  # Email của bạn
 app.config['MAIL_PASSWORD'] = 'lzbj zbuv fgmy uqae' # Mật khẩu ứng dụng hoặc API key
 app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
-
+VNP_TMN_CODE = "O7ZUX92Y"  # Mã TmnCode được cung cấp bởi VNPay
+VNP_HASH_SECRET = "CJWP1XSEFMVBKY7093FY2LL7KDW4TL8I"  # Khóa bí mật được cung cấp bởi VNPay
+VNP_URL = " https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"  # URL Sandbox (thử nghiệm)
+RETURN_URL = "   https://c9116d82c4c1.ngrok-free.app/payment_return"  # URL khách hàng quay lại sau thanh toán
+CALLBACK_URL = "  https://c9116d82c4c1.ngrok-free.app/payment_return"
 mail = Mail(app)
 cloudinary.config(
     cloud_name="dqtk7akkz",
