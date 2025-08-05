@@ -14,6 +14,8 @@ import io, os
 
 from flask_socketio import join_room
 
+from app.admin_view import *
+
 @socketio.on('join')
 def handle_join(data):
     room = data.get("room")
@@ -455,7 +457,18 @@ def danh_dau_thong_bao(id):
 def get_user_by_id(user_id):
     return dao.get_user_by_id(user_id)
 
+# Chặn quyền truy cập vào admin
+@app.before_request
+def before_request():
+    if '/admin' in request.path and not current_user.is_authenticated:
+        return redirect('/login')
 
+@app.route("/admin")
+@login_required
+def quan_tri():
+    if current_user.role != EnumRole.admin:
+        return "Bạn không có quyền truy cập", 403
+    return redirect('/admin')
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

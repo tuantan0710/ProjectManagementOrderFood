@@ -111,6 +111,13 @@
                             </a>
                         </li>
                         {% endif %}
+                        {% if current_user.role.value == 'Admin' %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('quan_tri') }}">
+                                Trang chủ quản trị
+                            </a>
+                        </li>
+                        {% endif %}
                         <li>
                             <hr class="dropdown-divider">
                         </li>

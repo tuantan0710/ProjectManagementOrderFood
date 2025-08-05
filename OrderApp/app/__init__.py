@@ -5,15 +5,26 @@ from flask import Flask
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_admin import Admin
 import cloudinary
+from app.custom_admin import MyAdminIndexView
 
 app = Flask(__name__)
 app.secret_key = 'JKDFKDFNEI4**7tyB^^b9HNJDFICB2@@@'
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/fooddb?charset=utf8mb4" % quote('Tuan@123')
+# app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/fooddb?charset=utf8mb4" % quote('Tuan@123')
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/fooddb?charset=utf8mb4" % quote('Admin@123')
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 db = SQLAlchemy(app)
 login = LoginManager(app)
+
+admin = Admin(app,
+    name='Trang chủ quản trị',     # Tên hiển thị trên header
+    index_view=MyAdminIndexView(name='Trang chủ'),  # ← Đây là tên của "Home"
+    template_mode='bootstrap4')
+app.secret_key='iaur98rq945o7qu0r^%*hUI9*3i'
+
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # Thay bằng server bạn dùng
 app.config['MAIL_PORT'] = 587
