@@ -11,7 +11,6 @@ from app.custom_admin import MyAdminIndexView
 
 app = Flask(__name__)
 app.secret_key = 'JKDFKDFNEI4**7tyB^^b9HNJDFICB2@@@'
-# app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/fooddb?charset=utf8mb4" % quote('Tuan@123')
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/fooddb?charset=utf8mb4" % quote('Admin@123')
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
