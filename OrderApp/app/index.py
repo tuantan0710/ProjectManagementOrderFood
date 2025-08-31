@@ -236,11 +236,11 @@ def giao_don(id):
 def huy_don(id):
     ly_do = request.form.get('ly_do_huy')
     don_hang = DonHang.query.get_or_404(id)
-    don_hang.trangThai = EnumStatus.DA_HUY
+    don_hang.trangThai = EnumStatus.daHuy
     don_hang.ly_do_huy = ly_do
     db.session.commit()
     flash('Đã hủy đơn hàng.', 'success')
-    return redirect(url_for('danh_sach_don_hang'))
+    return redirect(url_for('quan_ly_don_hang'))
 @app.route('/nha-hang/don-hang/<int:id>', methods=['GET', 'POST'])
 @login_required
 def chi_tiet_don_hang(id):
