@@ -1,0 +1,85 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">Xin chào, {{ user.username }} 👋</h2>
+            <p class="text-muted">Chào mừng đến với bảng điều khiển quản trị</p>
+        </div>
+        <a href="/" class="btn btn-outline-secondary">Order Food</a>
+    </div>
+
+    <!-- Card thống kê -->
+    <div class="row g-4">
+        <!-- Người dùng -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">👤 Người dùng</h5>
+                    <p class="card-text">Quản lý tài khoản người dùng, phân quyền truy cập hệ thống.</p>
+                    <a href="/admin/user/" class="btn btn-sm btn-primary">Quản lý</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nhà hàng -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-success">🏪 Nhà hàng</h5>
+                    <p class="card-text">Quản lý thông tin nhà hàng, trạng thái hoạt động.</p>
+                    <a href="/admin/nhahang/" class="btn btn-sm btn-success">Quản lý</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Món ăn -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">🍜 Món ăn</h5>
+                    <p class="card-text">Thêm, chỉnh sửa và xoá món ăn trong nhà hàng.</p>
+                    <a href="/admin/monan/" class="btn btn-sm btn-warning text-white">Quản lý</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dòng khác -->
+    <div class="row g-4 mt-3">
+        <!-- Đơn hàng -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">🛒 Đơn hàng</h5>
+                    <p class="card-text">Theo dõi đơn hàng và xử lý trạng thái giao hàng.</p>
+                    <a href="/admin/donhang/" class="btn btn-sm btn-danger">Quản lý</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Đánh giá -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-info">⭐ Đánh giá</h5>
+                    <p class="card-text">Xem và quản lý đánh giá từ người dùng về nhà hàng & món ăn.</p>
+                    <a href="/admin/danhgia/" class="btn btn-sm btn-info text-white">Quản lý</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thống kê -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary">📊 Thống kê</h5>
+                    <p class="card-text">Xem các biểu đồ thống kê người dùng, doanh thu, lượt bán...</p>
+                    <a href="/admin/thong-ke/" class="btn btn-sm btn-secondary">Xem thống kê</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

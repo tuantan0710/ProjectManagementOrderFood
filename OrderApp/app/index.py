@@ -19,6 +19,8 @@ import io, os
 
 from flask_socketio import join_room
 
+from app.admin_view import *
+
 @socketio.on('join')
 def handle_join(data):
     room = data.get("room")
@@ -551,6 +553,20 @@ def detele_cart(product_id):
 def get_user_by_id(user_id):
     return dao.get_user_by_id(user_id)
 
+
+# Chặn quyền truy cập vào admin 
+@app.before_request
+def before_request():
+    if '/admin' in request.path and not current_user.is_authenticated:
+        return redirect('/login')
+
+@app.route("/admin/")
+@login_required
+def quan_tri():
+    if current_user.role != EnumRole.admin:
+        return "Bạn không có quyền truy cập", 403
+    return redirect('/admin')
+
 @app.context_processor
 def common_response():
 
@@ -567,6 +583,7 @@ def cart():
 def add_address():
     err_msg = ""
     user_id = current_user.id  # Lấy ID người dùng hiện tại từ Flask-Login
+
 
     # Kiểm tra xem người dùng đã có địa chỉ mặc định chưa
     address = DeliveryAddress.query.filter_by(user_id=user_id, is_default=True).first()
