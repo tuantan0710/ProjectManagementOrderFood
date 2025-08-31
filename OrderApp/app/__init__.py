@@ -31,7 +31,11 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'nguyentrunganhtuan201004@gmail.com'  # Email của bạn
 app.config['MAIL_PASSWORD'] = 'lzbj zbuv fgmy uqae' # Mật khẩu ứng dụng hoặc API key
 app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
-
+VNP_TMN_CODE = "O7ZUX92Y"  # Mã TmnCode được cung cấp bởi VNPay
+VNP_HASH_SECRET = "CJWP1XSEFMVBKY7093FY2LL7KDW4TL8I"  # Khóa bí mật được cung cấp bởi VNPay
+VNP_URL = " https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"  # URL Sandbox (thử nghiệm)
+RETURN_URL = "   https://009c09fbc773.ngrok-free.app/payment_return"  # URL khách hàng quay lại sau thanh toán
+CALLBACK_URL = "  https://009c09fbc773.ngrok-free.app/payment_return"
 mail = Mail(app)
 cloudinary.config(
     cloud_name="dqtk7akkz",

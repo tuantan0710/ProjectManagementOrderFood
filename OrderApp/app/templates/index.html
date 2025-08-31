@@ -6,7 +6,7 @@
 {% block content %}
 <main class="container py-4">
 
-    <!-- FORM TÌM KIẾM -->
+
     <form method="get" action="/" class="mb-4">
         <div class="input-group shadow-sm">
             <span class="input-group-text bg-white border-end-0 rounded-start-pill">
@@ -21,7 +21,6 @@
         </div>
     </form>
 
-    <!-- DANH SÁCH MÓN ĂN -->
     {% if foods %}
     <h4 class="mb-3 text-danger">Danh sách món ăn</h4>
     <div class="row">
@@ -37,9 +36,10 @@
                            class="btn btn-outline-primary btn-sm w-50 me-1">
                             <i class="bi bi-eye"></i> Xem
                         </a>
-                        <button class="btn btn-danger btn-sm w-50 ms-1">
-                            <i class="bi bi-cart-plus"></i> Thêm vào giỏ
-                        </button>
+                      <button class="btn btn-danger btn-sm w-50 ms-1"
+                            onclick="addToCart({{ f.id }}, '{{ f.name }}', {{ f.gia }}, '{{ f.img }}',{{ f.idNhaHang }})">
+                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                    </button>
                     </div>
                 </div>
             </div>

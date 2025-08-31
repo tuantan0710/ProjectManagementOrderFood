@@ -1,0 +1,64 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<br>
+
+<div class="row mb-4">
+    <div class="col">
+        <div class="d-flex justify-content-between">
+            <div class="step active">1. Thông tin đơn hàng</div>
+            <div class="step ">2. Địa chỉ giao hàng</div>
+            <div class="step">3. Thanh toán và đặt mua</div>
+        </div>
+    </div>
+</div>
+
+<h1 class>Giỏ Hàng</h1>
+
+{% if 'cart' in session and session['cart'] %}
+<table class="table">
+    <tr>
+        <th>Mã Sản Phẩm</th>
+        <th>Tên Sản Phẩm</th>
+        <th>Đơn Giá</th>
+        <th>Số Lượng</th>
+
+        <th></th>
+    </tr>
+    {% for c in session['cart'].values() %}
+    <tr id="product{{c.id}}">
+        <td>{{c.id}}</td>
+        <td>{{c.name}}</td>
+        <td>{{c.gia}}</td>
+
+        <td>
+            <div class="form-group">
+                <input type="number" min="1" onblur="updateCart({{c.id}},this)" value="{{c.quantity}}" class="form-control"/>
+            </div>
+        </td>
+
+        <td>
+            <input type="button" value="Xóa" onclick="deleteCart({{c.id}})" class="btn btn-danger">
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="alert alert-info">
+    <h5>Tổng Sản Phẩm: <span class="cartCounter">{{stats.total_quantity}}</span></h5>
+    <h5>Tổng Tiền: <span id="total-amount">{{"{:,.1f}".format(stats.total_amount)}}</span> VND</h5>
+</div>
+
+{% if current_user.is_authenticated %}
+    <a href="{{ url_for('add_address') }}" class="btn btn-success">Thanh toán</a>
+{% else %}
+    <a href="{{ url_for('user_signin', next='cart') }}">Đăng Nhập Để Thanh Toán</a>
+{% endif %}
+
+<br><br>
+{% else %}
+<p><i>Không có sản phẩm nào trong giỏ</i></p>
+{% endif %}
+
+{% endblock %}

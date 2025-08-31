@@ -1,0 +1,98 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Step Indicator -->
+    <div class="mb-5">
+        <ul class="nav nav-pills justify-content-between">
+            <li class="nav-item flex-fill text-center">
+                <span class="badge badge-primary">1</span>
+                <span class="d-block mt-2">1. Thông tin đơn hàng</span>
+            </li>
+            <li class="nav-item flex-fill text-center">
+                <span class="badge badge-primary">2</span>
+                <span class="d-block mt-2">2. Địa chỉ giao hàng</span>
+            </li>
+            <li class="nav-item flex-fill text-center">
+                <span class="badge badge-secondary">3</span>
+                <span class="d-block mt-2">3. Thanh toán và đặt mua</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="row">
+        <!-- Address Form -->
+        <div class="col-md-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Địa Chỉ Giao Hàng</h4>
+
+                    {% if err_msg %}
+                        <div class="alert alert-danger">{{ err_msg }}</div>
+                    {% endif %}
+
+                    <form method="POST" action="{{ url_for('add_address') }}">
+                        <div class="form-group">
+                            <label>* Họ và Tên</label>
+                            <input type="text" class="form-control" name="fullName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>* Số điện thoại</label>
+                            <input type="tel" class="form-control" name="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>* Địa chỉ</label>
+                            <input type="text" class="form-control" name="address" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>* Tỉnh/Thành phố</label>
+                                <input type="text" class="form-control" name="city" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>* Quận/Huyện</label>
+                                <input type="text" class="form-control" name="district">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>* Xã/Phường</label>
+                            <input type="text" class="form-control" name="ward">
+                        </div>
+
+                        <button type="submit" class="btn btn-danger btn-block">Lưu Địa Chỉ & Tiếp Tục</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Tóm Tắt Đơn Hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Chữa Lành Tâm Trí x1</span>
+                        <strong>113.980đ</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span>Tạm tính:</span>
+                        <span>113.980đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Phí vận chuyển:</span>
+                        <span>22.000đ</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between font-weight-bold">
+                        <span>Thành tiền:</span>
+                        <span class="text-success">135.980đ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

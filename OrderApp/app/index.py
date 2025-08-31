@@ -2,12 +2,17 @@ from flask import render_template, request, redirect, url_for, session, abort, j
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 
-from app import dao, app, login, db, utils, socketio
-from app.models import DanhMucMonAn, MonAn, NhaHang, EnumRole, DonHang, ChiTietDonHang, EnumStatus, DanhGia, ThongBao
+from app import dao, app, login, db, utils, socketio , VNP_TMN_CODE, VNP_HASH_SECRET, VNP_URL, RETURN_URL, CALLBACK_URL
+from app.models import DanhMucMonAn, MonAn, NhaHang, EnumRole, DonHang, ChiTietDonHang, EnumStatus, DanhGia, ThongBao,DeliveryAddress
 import cloudinary.uploader
-
+from urllib.parse import urlencode
+import datetime
+import urllib
 from app.utils import send_gmail
-
+from dao import count_cart
+import uuid
+import hmac
+import hashlib
 from flask import render_template, make_response
 from xhtml2pdf import pisa
 import io, os
@@ -155,20 +160,24 @@ def edit_food(food_id):
 
     return render_template('restaurent/edit_food.html', food=mon)
 
+from collections import defaultdict
+
 @app.route("/nha-hang/don-hang")
 @login_required
 def quan_ly_don_hang():
     if current_user.role != EnumRole.nhaHang:
         return "Bạn không có quyền truy cập", 403
 
+    trang_thai = request.args.get("trang_thai")
+    sap_xep = request.args.get("sap_xep", "desc")
+    ma_don = request.args.get("ma_don", type=int)
 
-    trang_thai = request.args.get("trang_thai")  # VD: 'daXacNhan'
-    sap_xep = request.args.get("sap_xep", "desc")  # asc hoặc desc
+    query = DonHang.query.filter(DonHang.idNhaHang == current_user.id)
 
-    query = DonHang.query.filter_by(idNhaHang=current_user.id)
+    if ma_don:
+        query = query.filter(DonHang.id == ma_don)
 
     if trang_thai:
-        from app.models import EnumStatus
         try:
             query = query.filter(DonHang.trangThai == EnumStatus[trang_thai])
         except KeyError:
@@ -181,13 +190,59 @@ def quan_ly_don_hang():
 
     don_hang = query.all()
 
+    # Tổng hợp món từ các đơn "chờ"
+    mon_dang_cho = defaultdict(int)
+    don_cho = DonHang.query.filter(
+        DonHang.idNhaHang == current_user.id,
+        DonHang.trangThai == EnumStatus.cho
+    ).all()
+
+    for dh in don_cho:
+        for ct in dh.chi_tiet_don_hang:
+            mon_dang_cho[ct.mon_an.name] += ct.soLuong
+
     return render_template(
         "restaurent/quan_ly_don_hang.html",
         don_hang=don_hang,
         trang_thai_hien_tai=trang_thai,
-        sap_xep_hien_tai=sap_xep
+        sap_xep_hien_tai=sap_xep,
+        ma_don_hien_tai=ma_don,
+        tong_mon_dang_cho=mon_dang_cho
     )
 
+@app.route('/chi-tiet-don-hang-modal/<int:id>')
+def chi_tiet_don_hang_modal(id):
+    don_hang = DonHang.query.get_or_404(id)
+    return render_template('restaurent/chi_tiet_modal.html', don_hang=don_hang)
+@app.post('/don-hang/<int:id>/xac-nhan')
+@login_required
+def xac_nhan_don(id):
+    don = DonHang.query.get_or_404(id)
+    if don.trangThai.name == 'cho':
+        don.trangThai = EnumStatus.daXacNhan
+        db.session.commit()
+    return redirect(url_for('quan_ly_don_hang'))
+
+
+@app.post('/don-hang/<int:id>/giao')
+@login_required
+def giao_don(id):
+    don = DonHang.query.get_or_404(id)
+    if don.trangThai.name == 'daXacNhan':
+        don.trangThai = EnumStatus.daGiao
+        db.session.commit()
+    return redirect(url_for('quan_ly_don_hang'))
+
+
+@app.route('/don-hang/<int:id>/huy', methods=['POST'])
+def huy_don(id):
+    ly_do = request.form.get('ly_do_huy')
+    don_hang = DonHang.query.get_or_404(id)
+    don_hang.trangThai = EnumStatus.daHuy
+    don_hang.ly_do_huy = ly_do
+    db.session.commit()
+    flash('Đã hủy đơn hàng.', 'success')
+    return redirect(url_for('quan_ly_don_hang'))
 @app.route('/nha-hang/don-hang/<int:id>', methods=['GET', 'POST'])
 @login_required
 def chi_tiet_don_hang(id):
@@ -286,7 +341,6 @@ def chi_tiet_mon_an(id):
         thong_bao = ThongBao(
             noi_dung=noi_dung_tb,
             user_id=nha_hang_id,
-            mon_an_id=mon_an.id,
             url=url
         )
         db.session.add(thong_bao)
@@ -452,10 +506,53 @@ def danh_dau_thong_bao(id):
     db.session.commit()
 
     return jsonify({'success': True})
+@app.route('/api/add-cart', methods=['post'])
+def add_to_cart():
+    data = request.json
+    id = str(data.get('id'))
+    name = data.get('name')
+    gia = data.get('gia')
+    img = data.get('img')
+    idNhaHang = data.get('idNhaHang')
+    cart = session.get('cart')
+
+    if not cart:
+        cart = {}
+    if id in cart:
+        cart[id]['quantity'] = cart[id]['quantity'] + 1
+    else:
+        cart[id] = {
+            'id': id,
+            'name': name,
+            'gia': gia,
+            'img': img,
+            'quantity': 1,
+            'idNhaHang': idNhaHang
+        }
+    session['cart'] = cart
+    return jsonify(dao.count_cart(cart))
+@app.route('/api/update-cart', methods=['put'])
+def update_cart():
+    data = request.json
+    id = str(data.get('id'))
+    quantity = data.get('quantity')
+    cart = session.get('cart')
+    if cart and id in cart:
+        cart[id]['quantity'] = quantity
+        session['cart'] = cart
+    return jsonify(dao.count_cart(cart))
+@app.route('/api/delete-cart/<product_id>', methods=['delete'])
+def detele_cart(product_id):
+    cart = session.get('cart')
+    if cart and product_id in cart:
+        del cart[product_id]
+        session['cart'] = cart
+    return jsonify(dao.count_cart(cart))
 
 @login.user_loader
 def get_user_by_id(user_id):
     return dao.get_user_by_id(user_id)
+
 
 # Chặn quyền truy cập vào admin 
 @app.before_request
@@ -470,5 +567,219 @@ def quan_tri():
         return "Bạn không có quyền truy cập", 403
     return redirect('/admin')
 
+@app.context_processor
+def common_response():
+
+    return {
+        'categories': dao.load_categories(),
+
+        'cart_stats': dao.count_cart(session.get('cart'))
+    }
+@app.route("/cart")
+def cart():
+    return render_template('cart.html', stats=dao.count_cart(session.get('cart')))
+
+@app.route("/add_address", methods=['GET', 'POST'])
+def add_address():
+    err_msg = ""
+    user_id = current_user.id  # Lấy ID người dùng hiện tại từ Flask-Login
+
+
+    # Kiểm tra xem người dùng đã có địa chỉ mặc định chưa
+    address = DeliveryAddress.query.filter_by(user_id=user_id, is_default=True).first()
+
+    if request.method == 'POST':
+        # Lấy dữ liệu từ form
+        full_name = request.form.get('fullName', '').strip()
+        phone_number = request.form.get('phone', '').strip()
+        address_detail = request.form.get('address', '').strip()
+        city = request.form.get('city', '').strip()
+        district = request.form.get('district', '').strip()  # Không bắt buộc
+        ward = request.form.get('ward', '').strip()  # Không bắt buộc
+        country = "Vietnam"  # Mặc định
+        is_default = True  # Mặc định đặt địa chỉ này làm chính
+
+        try:
+            # Kiểm tra các trường bắt buộc
+            if not all([full_name, phone_number, address_detail, city]):
+                err_msg = "Vui lòng điền đầy đủ các trường bắt buộc!"
+            else:
+                if address:  # Nếu đã có địa chỉ mặc định -> Cập nhật
+                    address.full_name = full_name
+                    address.phone_number = phone_number
+                    address.address = address_detail
+                    address.city = city
+                    address.state = district
+                    address.ward = ward
+                else:  # Nếu chưa có địa chỉ -> Thêm địa chỉ mới
+                    new_address = DeliveryAddress(
+                        full_name=full_name,
+                        phone_number=phone_number,
+                        address=address_detail,
+                        city=city,
+                        state=district,
+                        ward=ward,
+                        country=country,
+                        is_default=is_default,
+                        user_id=user_id,
+                    )
+                    db.session.add(new_address)
+
+                # Lưu thay đổi vào database
+                db.session.commit()
+
+                # Điều hướng sang bước tiếp theo (ví dụ: bước thanh toán)
+                return redirect(url_for('pay_h'))
+
+        except Exception as ex:
+            # Ghi log và hiển thị thông báo lỗi
+            app.logger.error(f"Lỗi khi thêm hoặc cập nhật địa chỉ: {ex}")
+            err_msg = "Hệ thống đang gặp sự cố. Vui lòng thử lại sau!"
+
+    # Render lại trang với thông báo lỗi nếu có
+    return render_template('address.html', address=address, err_msg=err_msg)
+@app.route('/pay')
+@login_required
+def pay_h():
+    user_id = current_user.id
+    addresses = dao.get_user_addresses(user_id)
+    cart = session.get('cart', {})
+
+    total_amount = sum(item['gia'] * item['quantity'] for item in cart.values())
+    shipping_fee = 15000  # Phí cố định
+
+    return render_template('pay.html',
+                           addresses=addresses,
+                           total_amount=total_amount,
+                           shipping_fee=shipping_fee)
+
+def get_payment_url(request_data, secret_key):
+    # Sắp xếp dữ liệu theo thứ tự alphabe
+    inputData = sorted(request_data.items())
+    queryString = ''
+    seq = 0
+    for key, val in inputData:
+        if seq == 1:
+            queryString = queryString + "&" + key + '=' + urllib.parse.quote_plus(str(val))
+        else:
+            seq = 1
+            queryString = key + '=' + urllib.parse.quote_plus(str(val))
+
+    # Tạo mã băm HMACSHA512
+    hash_value = hmac.new(secret_key.encode('utf-8'), queryString.encode('utf-8'), hashlib.sha512).hexdigest()
+    return f"{VNP_URL}?{queryString}&vnp_SecureHash={hash_value}"
+@app.route('/payment', methods=['GET', 'POST'])
+def payment():
+    if request.method == 'POST':
+        cart = session.get('cart', {})
+        cart_info = count_cart(cart)
+        total_amount = cart_info['total_amount']  # Lấy total_quantity để làm amount
+        order_type = "Bán Sach"
+        order_id = datetime.now().strftime('%Y%m%d%H%M%S') + str(uuid.uuid4().int)[:6]
+        order_desc = f"KaliLove Thanh Toán số tiền là {total_amount} VND"
+        bank_code = "NCB"
+        language = "vn"
+
+        ipaddr = request.remote_addr
+        txn_ref = order_id  # Mã giao dịch của bạn
+        create_date = datetime.now().strftime('%Y%m%d%H%M%S')
+
+        # Xây dựng requestData
+        request_data = {
+            'vnp_Version': '2.1.0',
+            'vnp_Command': 'pay',
+            'vnp_TmnCode': VNP_TMN_CODE,
+            'vnp_Amount': total_amount * 100,  # VNPAY yêu cầu số tiền nhân 100
+            'vnp_CurrCode': 'VND',
+            'vnp_TxnRef': txn_ref,
+            'vnp_OrderInfo': order_desc,
+            'vnp_OrderType': order_type,
+            'vnp_Locale': language if language else 'vn',
+            'vnp_BankCode': bank_code if bank_code else '',
+            'vnp_CreateDate': create_date,
+            'vnp_IpAddr': ipaddr,
+            'vnp_ReturnUrl': RETURN_URL,
+        }
+
+        # Lấy URL thanh toán
+        payment_url = get_payment_url(request_data, VNP_HASH_SECRET)
+
+        return redirect(payment_url)
+
+    return render_template('pay.html')
+
+@app.route('/payment_return', methods=['GET'])
+def payment_return():
+    input_data = request.args
+    if input_data:
+        vnp_secure_hash = input_data.get('vnp_SecureHash')
+        vnp_transaction_no = input_data.get('vnp_TransactionNo')
+        vnp_response_code = input_data.get('vnp_ResponseCode')
+
+        # Xác thực mã băm
+        request_data = {key: value for key, value in input_data.items() if key != 'vnp_SecureHash'}
+        hash_value = hmac.new(VNP_HASH_SECRET.encode('utf-8'), urllib.parse.urlencode(request_data).encode('utf-8'),
+                              hashlib.sha512).hexdigest()
+
+        if vnp_secure_hash == hash_value:
+            if vnp_response_code == "00":
+                if vnp_secure_hash == hash_value:
+                    if vnp_response_code == "00":
+                        cart = session.get('cart', {})
+                        if not cart:
+                            flash("Giỏ hàng trống!", "warning")
+                            return redirect(url_for('cart'))
+
+                        luu_don_hang(cart, hinh_thuc="vnpay")
+                        flash("Thanh toán và đặt hàng thành công!", "success")
+                        return render_template('payment_return.html', result="Thành công",
+                                               transaction_no=vnp_transaction_no)
+            else:
+                return render_template('payment_return.html', result="Lỗi", transaction_no=vnp_transaction_no)
+        else:
+            return render_template('payment_return.html', result="Sai mã băm", transaction_no=vnp_transaction_no)
+
+    return render_template('payment_return.html', result="Không nhận được dữ liệu")
+@app.route('/payment_cod', methods=['POST'])
+@login_required
+def payment_cod():
+    cart = session.get('cart', {})
+    if not cart:
+        flash("Giỏ hàng trống!", "warning")
+        return redirect(url_for('cart'))
+
+    luu_don_hang(cart, hinh_thuc="cod")
+    flash("Đặt hàng thành công. Đơn hàng đang được xử lý!", "success")
+    return redirect(url_for('order_success'))
+def luu_don_hang(cart, hinh_thuc="cod"):
+    if not cart:
+        return None
+
+    cart_info = count_cart(cart)
+    total_amount = cart_info['total_amount']
+    user_id = current_user.id
+
+    new_order = DonHang(
+        idKH=user_id,
+        idNhaHang=next(iter(cart.values()))['idNhaHang'],
+        trangThai=EnumStatus.cho,
+        thoiGian=datetime.now(),
+        tongGia=total_amount,
+
+    )
+    db.session.add(new_order)
+    db.session.flush()
+
+    for item in cart.values():
+        detail = ChiTietDonHang(
+            idDH=new_order.id,
+            idMonAn=item['id'],
+            soLuong=item['quantity']
+        )
+        db.session.add(detail)
+
+    db.session.commit()
+    session.pop('cart', None)
+    return new_order
 if __name__ == '__main__':
     socketio.run(app, debug=True)

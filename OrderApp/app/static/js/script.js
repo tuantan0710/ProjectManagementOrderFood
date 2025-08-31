@@ -153,3 +153,130 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-xem').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
+            const modalBody = document.getElementById('chiTietModalBody');
+
+            // Hiện spinner loading
+            modalBody.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                </div>
+            `;
+
+            // Mở modal
+            var chiTietModal = new bootstrap.Modal(document.getElementById('chiTietModal'));
+            chiTietModal.show();
+
+            // Gửi yêu cầu AJAX
+            fetch(`/chi-tiet-don-hang-modal/${id}`)
+                .then(response => response.text())
+                .then(data => {
+                    modalBody.innerHTML = data;
+                })
+                .catch(error => {
+                    modalBody.innerHTML = `<div class="alert alert-danger">Lỗi khi tải dữ liệu.</div>`;
+                    console.error('Lỗi:', error);
+                });
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = new bootstrap.Modal(document.getElementById('modalHuyDon'));
+  const form = document.getElementById('formHuyDon');
+  const inputId = document.getElementById('inputDonHangId');
+
+  document.querySelectorAll('.btn-huy-don').forEach(button => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.id;
+      inputId.value = id;
+      form.action = `/don-hang/${id}/huy`;  // Gán action động
+      modal.show();
+    });
+  });
+});
+function addToCart( id, name, gia,img,idNhaHang) {
+    event.preventDefault();
+
+    fetch('/api/add-cart', {
+        method: 'post',
+        body: JSON.stringify({
+            'id': id,
+            'name': name,
+            'gia': gia,
+            'img':img,
+            'idNhaHang': idNhaHang
+
+        }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(function(res) {
+        console.info(res);
+        return res.json();
+    })
+    .then(function(data) {
+        console.info(data);
+
+        let counter=document.getElementsByClassName('cartCounter')
+        for( let i=0;i<counter.length;i++)
+            counter[i].innerText=data.total_quantity
+    })
+    .catch(function(err) {
+        console.error(err);
+    });
+}
+
+function updateCart(id,obj){
+    fetch('/api/update-cart',{
+
+        method:'put',
+        body:JSON.stringify( {
+        'id':id,
+        'quantity':parseInt(obj.value)
+
+        }),
+        headers:{
+        'Content-Type': 'application/json'
+        }
+        }).then(res => res.json()).then(data =>{
+            let counter=document.getElementsByClassName('cartCounter');
+            for( let i=0;i<counter.length;i++)
+                counter[i].innerText=data.total_quantity;
+            let amount=document.getElementById('total-amount')
+            amount.innerText =new Intl.NumberFormat().format(data.total_amount)
+        })
+}
+function deleteCart(id){
+    if(confirm("ban co cac chan xoa k")==true)
+    {
+         fetch('/api/delete-cart/'+id,{
+
+        method:'delete',
+
+        headers:{
+        'Content-Type': 'application/json'
+        }
+        }).then(res => res.json()).then(data =>{
+            let counter=document.getElementsByClassName('cartCounter');
+            for( let i=0;i<counter.length;i++)
+                counter[i].innerText=data.total_quantity;
+            let amount=document.getElementById('total-amount')
+            amount.innerText =new Intl.NumberFormat().format(data.total_amount)
+             let e =document.getElementById("product"+id)
+             e.style.display= "none"
+        }).catch(err => console.error(err))
+    }
+
+}
+function callPay() {
+    // Hiển thị modal
+    document.getElementById('paymentModal').style.display = 'flex';
+}

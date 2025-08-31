@@ -79,7 +79,8 @@
             {% if current_user.is_authenticated and current_user.role.value == 'khachHang' %}
             <form method="POST">
                 <input type="hidden" name="so_luong" value="1">
-                <button class="btn btn-outline-success btn-sm mt-2">
+                <button class="btn btn-outline-success btn-sm mt-2"
+                onclick="addToCart({{ f.id }}, '{{ f.name }}', {{ f.gia }}, '{{ f.img }}',{{ f.idNhaHang }})">
                     <i class="bi bi-cart-plus"></i> Thêm vào giỏ hàng
                 </button>
             </form>
