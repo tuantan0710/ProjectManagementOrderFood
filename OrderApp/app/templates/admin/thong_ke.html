@@ -1,0 +1,189 @@
+{% extends 'admin/master.html' %}
+</style>
+{% block body %}
+<div class="container mt-4">
+    <h2 class="mb-4">Trang thống kê hệ thống</h2>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="statsTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="users-tab" data-bs-toggle="tab" href="#users" role="tab">Tài khoản</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="restaurants-tab" data-bs-toggle="tab" href="#restaurants" role="tab">Nhà hàng</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="foods-tab" data-bs-toggle="tab" href="#foods" role="tab">Món ăn</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="ratings-tab" data-bs-toggle="tab" href="#ratings" role="tab">Đánh giá</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="revenue-tab" data-bs-toggle="tab" href="#revenue" role="tab">Doanh thu</a>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content mt-4">
+        <!-- Users -->
+        <div class="tab-pane fade show active" id="users" role="tabpanel">
+            <h5>Phân loại tài khoản</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <canvas id="userRoleChart"></canvas>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-group">
+                        {% for label, count in user_role_data_pairs %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ label }}</span>
+                            <strong>{{ count }}</strong>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Restaurants -->
+        <div class="tab-pane fade row" id="restaurants" role="tabpanel">
+            <h5>Nhà hàng đang hoạt động</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <canvas id="restaurantActiveChartt" height="40px"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                    <p><strong>Đang hoạt động:</strong> {{ user_active_data[0] }}</p>
+                    <p><strong>Ngừng hoạt động:</strong> {{ user_active_data[1] }}</p>
+            </div>
+        </div>
+
+        <!-- Foods -->
+        <div class="tab-pane fade" id="foods" role="tabpanel">
+            <h5>Top món ăn bán chạy</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <canvas id="topFoodsChart"></canvas>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-group">
+                        {% for label, count in top_foods_pairs %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ label }}</span>
+                            <strong>{{ count }}</strong>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ratings -->
+        <div class="tab-pane fade" id="ratings" role="tabpanel">
+            <h5>Sao trung bình theo món</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <canvas id="ratingChart"></canvas>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-group">
+                        {% for label, avg in rating_avg_pairs %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ label }}</span>
+                            <strong>{{ avg }}</strong>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="tab-pane fade" id="revenue" role="tabpanel">
+            <h5>Doanh thu theo nhà hàng</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-group">
+                        {% for label, money in revenue_pairs %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ label }}</span>
+                            <strong>{{ money | round(2) }} VNĐ</strong>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JS: ChartJS + Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Charts
+    const userRoleChart = new Chart(document.getElementById('userRoleChart'), {
+        type: 'pie',
+        data: {
+            labels: {{ user_role_data.labels | tojson }},
+            datasets: [{
+                data: {{ user_role_data.data | tojson }},
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc']
+            }]
+        }
+    });
+
+    const restaurantActiveChartt = new Chart(document.getElementById('restaurantActiveChartt'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Hoạt động', 'Không hoạt động'],
+            datasets: [{
+                data: {{ user_active_data | tojson }},
+                backgroundColor: ['#28a745', '#dc3545']
+            }]
+
+        }
+    });
+
+    const topFoodsChart = new Chart(document.getElementById('topFoodsChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ top_foods.labels | tojson }},
+            datasets: [{
+                label: 'Số lượng bán',
+                data: {{ top_foods.data | tojson }},
+                backgroundColor: '#007bff'
+            }]
+        }
+    });
+
+    const ratingChart = new Chart(document.getElementById('ratingChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ rating_avg.labels | tojson }},
+            datasets: [{
+                label: 'Sao trung bình',
+                data: {{ rating_avg.data | tojson }},
+                backgroundColor: '#ffc107'
+            }]
+        }
+    });
+
+    const revenueChart = new Chart(document.getElementById('revenueChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ revenue.labels | tojson }},
+            datasets: [{
+                label: 'Doanh thu (VNĐ)',
+                data: {{ revenue.data | tojson }},
+                backgroundColor: '#17a2b8'
+            }]
+        }
+    });
+</script>
+{% endblock %}

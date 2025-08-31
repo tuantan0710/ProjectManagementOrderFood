@@ -1,0 +1,147 @@
+<body>
+<nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Order Food</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="collapsibleNavbar">
+            <!-- Menu trái -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Trang chủ</a>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Danh mục món ăn
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        {% for c in categories %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('food_by_category', category_id=c.id) }}">
+                                {{ c.tenDanhMuc }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('danh_sach_nha_hang') }}">Nhà hàng</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Trợ giúp</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Liên hệ</a>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                {% if current_user.is_authenticated %}
+                {% if current_user.role.value == 'khachHang' %}
+                <li class="nav-item mx-2 position-relative">
+                    <a class="nav-link position-relative px-3 py-2 rounded bg-light shadow-sm d-flex align-items-center justify-content-center"
+                       href="/" title="Giỏ hàng"
+                       style="transition: all 0.3s ease;">
+                        <i class="bi bi-bag-check-fill fs-5 text-primary"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white"
+                              style="font-size: 0.7rem; min-width: 20px; height: 20px; line-height: 20px; padding: 0 6px;">
+            0
+        </span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                <li class="nav-item dropdown mx-2">
+                    <a class="nav-link position-relative" href="#" id="thongBaoDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bell-fill fs-5"></i>
+                        <span id="badge-so-thong-bao"
+                              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                              style="font-size: 0.7rem; {% if so_thong_bao == 0 %}display: none;{% endif %}">
+    {{ so_thong_bao }}
+</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="thongBaoDropdown" id="danhSachThongBao"
+                        style="max-height: 300px; overflow-y: auto;">
+                        <li class="dropdown-header">Thông báo</li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        {% if ds_thong_bao %}
+                        {% for tb in ds_thong_bao %}
+                        <li class="dropdown-item small thong-bao-item {% if not tb.da_doc %}fw-bold{% endif %}"
+                            data-id="{{ tb.id }}" data-url="{{ tb.url }}" style="cursor: pointer;">
+                            <span>{{ tb.noi_dung }}</span><br>
+                            <small class="text-muted">{{ tb.thoi_gian.strftime('%H:%M %d/%m/%Y') }}</small>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        {% endfor %}
+
+                        {% else %}
+                        <li class="text-muted px-3">Không có thông báo nào</li>
+                        {% endif %}
+                    </ul>
+                </li>
+                {% endif %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="{{ current_user.avt or url_for('static', filename='images/default-user.png') }}"
+                             class="rounded-circle" width="30" height="30" alt="avatar">
+                        <span>Chào {{ current_user.username }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% if current_user.role.value == 'nhaHang' %}
+                        <li>
+                            <a class="dropdown-item"
+                               href="{{ url_for('chi_tiet_nha_hang', nha_hang_id=current_user.id) }}">
+                                Thông tin nhà hàng
+                            </a>
+                            <a class="dropdown-item" href="{{ url_for('quan_ly_don_hang') }}">
+                                Quản lý đơn hàng
+                            </a>
+                            <a class="dropdown-item" href="{{ url_for('thong_ke_doanh_thu') }}">
+                                Báo cáo thống kê
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if current_user.role.value == 'Admin' %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('quan_tri') }}">
+                                Trang chủ quản trị
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout_process') }}">Đăng xuất</a>
+                        </li>
+                    </ul>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link btn btn-success px-3 py-1 text-white" href="{{ url_for('login_process') }}">Đăng
+                        nhập</a>
+                </li>
+                e
+                <li class="nav-item">
+                    <a class="nav-link btn btn-success px-3 py-1 text-white" href="{{ url_for('register_process') }}">Đăng
+                        ký</a>
+                </li>
+                {% endif %}
+            </ul>
+
+
+        </div>
+    </div>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>

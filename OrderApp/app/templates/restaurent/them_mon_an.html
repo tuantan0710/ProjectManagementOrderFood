@@ -1,0 +1,53 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<main class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Thêm món ăn mới</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Tên món ăn" required>
+                            <label for="name"><i class="bi bi-egg-fried"></i> Tên món ăn</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="number" step="1000" class="form-control" id="gia" name="gia" placeholder="Giá món ăn" required>
+                            <label for="gia"><i class="bi bi-cash-coin"></i> Giá (VND)</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="idDanhMuc" name="idDanhMuc" required>
+                                {% for dm in danh_mucs %}
+                                <option value="{{ dm.id }}">{{ dm.tenDanhMuc }}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="idDanhMuc"><i class="bi bi-tags-fill"></i> Danh mục</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="img" class="form-label"><i class="bi bi-image-fill"></i> Ảnh món ăn</label>
+                            <input type="file" class="form-control" id="img" name="img" accept="image/*">
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control" id="chiTietMon" name="chiTietMon" style="height: 120px;" placeholder="Chi tiết món ăn"></textarea>
+                            <label for="chiTietMon"><i class="bi bi-info-circle"></i> Mô tả</label>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-save"></i> Lưu món ăn
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

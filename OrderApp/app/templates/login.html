@@ -1,0 +1,41 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container py-5 d-flex justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg rounded-4 p-4">
+            <h2 class="text-center text-primary mb-4">
+                <i class="bi bi-person-circle"></i> ĐĂNG NHẬP
+            </h2>
+
+            {% if err_msg %}
+            <div class="alert alert-danger text-center">
+                {{ err_msg }}
+            </div>
+            {% endif %}
+
+            <form method="post">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="username" name="username"
+                           placeholder="Tên đăng nhập" required>
+                    <label for="username"><i class="bi bi-person"></i> Tên đăng nhập</label>
+                </div>
+
+                <div class="form-floating mb-4">
+                    <input type="password" class="form-control" id="password" name="password"
+                           placeholder="Mật khẩu" required>
+                    <label for="password"><i class="bi bi-lock"></i> Mật khẩu</label>
+                </div>
+
+                <button class="btn btn-primary w-100 py-2">
+                    <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                </button>
+            </form>
+
+            <div class="text-center mt-3">
+                <small>Chưa có tài khoản? <a href="/register">Đăng ký</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

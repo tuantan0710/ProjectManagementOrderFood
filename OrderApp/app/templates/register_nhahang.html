@@ -1,0 +1,79 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<main class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white text-center">
+                    <h4 class="mb-0">ĐĂNG KÝ NHÀ HÀNG</h4>
+                </div>
+                <div class="card-body">
+                    {% if err_msg %}
+                        <div class="alert alert-danger">{{ err_msg }}</div>
+                    {% endif %}
+
+                    <form method="post" action="/register-nhahang" enctype="multipart/form-data">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Tên nhà hàng" required>
+                            <label for="name"><i class="bi bi-shop"></i> Tên nhà hàng</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Tên đăng nhập" required>
+                            <label for="username"><i class="bi bi-person-circle"></i> Tên đăng nhập</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+                            <label for="email"><i class="bi bi-envelope"></i> Email</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Mật khẩu" required>
+                            <label for="password"><i class="bi bi-lock-fill"></i> Mật khẩu</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="confirm" name="confirm" placeholder="Xác nhận mật khẩu" required>
+                            <label for="confirm"><i class="bi bi-check-circle-fill"></i> Xác nhận mật khẩu</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="adress" name="adress" placeholder="Địa chỉ" required>
+                            <label for="adress"><i class="bi bi-geo-alt-fill"></i> Địa chỉ nhà hàng</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="MST" name="MST" placeholder="Mã số thuế" required>
+                            <label for="MST"><i class="bi bi-123"></i> Mã số thuế</label>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label for="open" class="form-label"><i class="bi bi-clock-history"></i> Giờ mở cửa</label>
+                                <input type="time" class="form-control" id="open" name="gio_mo_cua" required>
+                            </div>
+                            <div class="col">
+                                <label for="close" class="form-label"><i class="bi bi-clock"></i> Giờ đóng cửa</label>
+                                <input type="time" class="form-control" id="close" name="gio_dong_cua" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="avt" class="form-label"><i class="bi bi-image-fill"></i> Ảnh đại diện</label>
+                            <input type="file" class="form-control" id="avt" name="avt" accept="image/*">
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-shop-window"></i> Đăng ký nhà hàng
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
