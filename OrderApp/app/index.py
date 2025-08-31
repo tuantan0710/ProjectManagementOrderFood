@@ -457,13 +457,13 @@ def danh_dau_thong_bao(id):
 def get_user_by_id(user_id):
     return dao.get_user_by_id(user_id)
 
-# Chặn quyền truy cập vào admin
+# Chặn quyền truy cập vào admin 
 @app.before_request
 def before_request():
     if '/admin' in request.path and not current_user.is_authenticated:
         return redirect('/login')
 
-@app.route("/admin")
+@app.route("/admin/")
 @login_required
 def quan_tri():
     if current_user.role != EnumRole.admin:
